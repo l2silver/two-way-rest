@@ -1,0 +1,221 @@
+import React, {Component} from 'react'
+import {findDOMNode} from 'react-dom';
+import {connect} from 'react-redux';
+import {Map, List} from 'immutable';
+import * as actionCreators from './mirrorRestCreators';
+import inflect from 'i';
+const i = inflect(true);
+
+export function convertTree(tree){
+		if( Object.prototype.toString.call( tree ) === '[object Array]' ) {
+		    return tree;
+		}else{
+			return Map(tree).toList().toJS();
+		}
+}
+
+export const DeclareReducer = React.createClass({  
+	childContextTypes: {
+		reducer: React.PropTypes.string.isRequired
+	},
+	getChildContext: function() {
+		return {reducer: this.props.reducer};
+	},
+	render: function(){
+		return(
+			<div className='DeclareReducer'>
+				{this.props.children}
+			</div>)
+	}   
+});
+
+export const StupidMRIndex = React.createClass({
+	 contextTypes: {
+	   reducer: React.PropTypes.string.isRequired
+	 },
+	componentDidMount: function(){
+		console.log('hello good morning from stupid mri component did mount', this.context.reducer);
+		console.log('tree type', typeof this.props.tree);
+		console.log('tree type', this.props.tree);
+		
+    	this.props.index(this.context.reducer, convertTree(this.props.tree), findDOMNode(this));
+  	},
+	render: function(){
+		return(
+				<form>
+					{this.props.children}
+				</form>
+			)
+	}
+})
+
+
+export const StupidMRFormCreate = React.createClass({
+	contextTypes: {
+	   reducer: React.PropTypes.string.isRequired
+	 },
+	submitForm: function(event){
+		event.preventDefault();
+		this.props.create(this.context.reducer, convertTree(this.props.tree), event.target);
+	},
+	render: function(){
+		return(
+			<RestForm {...this.props} submitForm={this.submitForm}/>
+			)
+	}
+})
+
+export const StupidMRFormCreateChild = React.createClass({
+	contextTypes: {
+	   reducer: React.PropTypes.string.isRequired
+	 },
+	submitForm: function(event){
+		event.preventDefault();
+		console.log('CreatreChildTree', this.props.tree);
+		const tree = List(convertTree(this.props.tree)).unshift('Substate');
+		console.log('CreatreChildTree', tree);
+		this.props.create(this.context.reducer
+			, tree.concat([this.props.id.toString(), this.props.childName]).toArray()
+			, event.target, this.props.callback
+		);
+	},
+	render: function(){	
+		const tree = List(convertTree(this.props.tree));
+		const objectModelName = tree.last();
+		return(
+			<form onSubmit={this.submitForm}>
+				{this.props.children}
+				<input type='hidden' name='id' value='' />
+				<input type='hidden' name={objectModelName.singularize + '_id'} value={this.props.id.toString()} />
+			</form>
+			)
+	}
+})
+
+export const StupidMRFormUpdate = React.createClass({
+	contextTypes: {
+	   reducer: React.PropTypes.string.isRequired
+	 },
+	submitForm: function(event){
+		event.preventDefault();
+		this.props.update(this.context.reducer, convertTree(this.props.tree), event.target);
+	},
+	render: function(){
+		return(
+			<RestForm {...this.props} submitForm={this.submitForm}/>
+			)
+	}
+})
+
+export const StupidMRXUpdate = React.createClass({
+	contextTypes: {
+	   reducer: React.PropTypes.string.isRequired
+	 },
+	submitForm: function(event){
+		event.preventDefault();
+		console.log('MRXUpdate', this.context.reducer);
+		this.props.updateFront(this.context.reducer,convertTree(this.props.tree), findDOMNode(this));
+	},
+	render: function(){
+		return(
+			<RestXForm {...this.props} submitForm={this.submitForm}/>
+			)
+	}
+})
+
+export const StupidMRFormDestroy = React.createClass({
+	contextTypes: {
+	   reducer: React.PropTypes.string.isRequired
+	 },
+	submitForm: function(event){
+		event.preventDefault();
+		this.props.destroy(this.context.reducer, convertTree(this.props.tree), findDOMNode(this));
+	},
+	render: function(){
+		return(
+			<RestXForm {...this.props} submitForm={this.submitForm}/>
+			)
+	}
+})
+
+
+export class RestForm extends Component {
+	render(){
+		return(
+				<form onSubmit={this.props.submitForm.bind(this)}>
+					{this.props.children}
+					<input type='hidden' name='id' value={this.props.id}/>
+				</form>
+			)
+	}
+}
+
+export class RestXForm extends Component {
+	render(){
+		return(
+				<div className='X' onClick={this.props.submitForm.bind(this)}>
+					{this.props.children}
+					<input type='hidden' name='id' value={this.props.id}/>
+				</div>
+			)
+	}
+}
+
+function mapStateToProps(state) {
+  return {};
+}
+
+export class MRFormCreateTwo extends Component {
+	render(){
+		if(this.props.substate && this.props.substate.hasIn([this.props.tree])){
+	      return this.props.substate.get('AssembliesCategories').map((AssembliesCategory)=>{
+	        return (
+	            <MRFormCreate {...this.props}>
+	              {this.props.children}
+	            </MRFormCreate>
+	          )
+	      })  
+	    }else{
+	      return (
+	        <span>
+	          	<MRFormCreate {...this.props}>
+	              {this.props.children}
+	            </MRFormCreate>
+	        </span>
+	      )
+	    }
+	}
+}
+
+
+export const MRIndex = connect(
+	mapStateToProps
+	, actionCreators
+)(StupidMRIndex);
+
+
+export const MRFormCreate = connect(
+	mapStateToProps
+	, actionCreators 
+)(StupidMRFormCreate);
+
+export const MRFormCreateChild = connect(
+	mapStateToProps
+	, actionCreators 
+)(StupidMRFormCreateChild);
+
+
+export const MRFormUpdate = connect(
+	mapStateToProps
+	, actionCreators 
+)(StupidMRFormUpdate);
+
+export const MRXUpdate = connect(
+	mapStateToProps
+	, actionCreators
+)(StupidMRXUpdate);
+
+export const MRFormDestroy = connect(
+	mapStateToProps
+	, actionCreators 
+)(StupidMRFormDestroy);
