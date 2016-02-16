@@ -4,7 +4,7 @@
   "description": "Two-Way-Rest architecture for react-redux",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "NODE_ENV=test mocha --compilers js:babel-core/register --require ./test/test_helper.js './__test__/*_spec.js' --recursive"
   },
   "repository": {
     "type": "git",
@@ -27,5 +27,11 @@
     "react-redux": "^4.4.0",
     "redux": "^3.3.1",
     "redux-thunk": "^1.0.3"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.2.0",
+    "jsdom": "^8.0.2",
+    "mocha": "^2.4.5"
   }
 }
