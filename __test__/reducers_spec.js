@@ -1,9 +1,9 @@
 import {expect} from 'chai';
 import {Map, OrderedMap} from 'immutable';
-import {combineSwitches, generateRestSwitch} from './../mirrorRestReducers';
+import {combineSwitches, generateRestSwitch} from './../lib/reducers';
 
 
-describe('mirrorRestReducers', ()=>{
+describe.skip('mirrorRestReducers', ()=>{
 	it('combineSwitches', ()=>{
 		function simple(state, action){
 			return state*2
