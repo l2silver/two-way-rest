@@ -24,27 +24,6 @@ describe('core', ()=>{
 
 	First, check if object is an array.
 */
-
-
-
-	describe.only('convertNewJSON', ()=>{
-		it('convertNewJSON object', ()=>{
-			const json = {
-				1: {id: 2}
-				, 2: {id: 3}
-				};
-						
-			expect(convertNewJSON(json)).to.equal(
-				OrderedMap({
-					2: OrderedMap({id: 2})
-					, 3: OrderedMap({id: 3})
-				})
-			);
-		});	
-		it('convertNewJSON array', ()=>{
-
-		});	
-	});
 	
 
 	describe('transformResponse', ()=>{
@@ -106,7 +85,7 @@ describe('core', ()=>{
 					 ['4', Map({
 					 	  id:4
 					 	, types: OrderedMap([
-					 		[1, Map({id: 1})]
+					 		['1', Map({id: 1})]
 					 	])
 					})]
 					]
@@ -182,32 +161,48 @@ describe('core', ()=>{
 	});
 	describe('create', ()=>{
 		describe('substate', ()=>{
-			it.only('success', ()=>{
+			it('success', ()=>{
 				const state = Map({
-					users: OrderedMap()
-					, Substate: Map()
+
 				});
 	
 				const nextState = substateCreate(state, ['users', '1', 'subusers'], {looks: 'good', id: 2});
 				expect(nextState).to.equal(
 					Map({
-						users: OrderedMap({
-							1: Map({
-								subusers: OrderedMap({
-									2: Map({
-										looks: 'good'
-										, 'id': 2 
+							Substate: OrderedMap({
+								users: OrderedMap({
+								1: Map({
+									subusers: OrderedMap({
+										2: Map({
+											  looks: 'good'
+											, id: 2
+											, tree: List(['users', '1', 'subusers'])
+										})
 									})
 								})
 							})
-						}), 
-						Substate: Map()
+						})
 					})
 				);
-			});	
+			});
 		});
-		
-		it('success', ()=>{		
+		it('success', ()=>{
+			const state = Map({
+				users: OrderedMap()
+				, Substate: Map({
+					users: OrderedMap({
+						1: Map({
+							subusers: OrderedMap({
+								2: Map({
+									looks: 'good'
+									, 'id': 2
+									, tree: List(['users', '1', 'subusers'])
+								})
+							})
+						})
+					})
+				})
+			})	
 			const nextState = create(state, ['users', '1', 'subusers'], {looks: 'good', id: 2});
 			expect(nextState).to.equal(
 				Map({
@@ -274,13 +269,19 @@ describe('core', ()=>{
 	});
 	
 	it('update', ()=>{
-		const nextState = update(state, ['users', '1', 'subusers', '2'], {looks: 'alright'});
+
+		const state = Map({
+			users: OrderedMap()
+			, Substate: Map()
+		})
+
+		const nextState = update(state, ['users', '1', 'subusers'], {looks: 'alright', id: 2});
 		expect(nextState).to.equal(
 			Map({
 				users: OrderedMap({
-					1: Map({
-						subusers: OrderedMap({2: 
-							Map({looks: 'alright'})
+					'1': Map({
+						subusers: OrderedMap({'2': 
+							Map({looks: 'alright', id: 2})
 						})
 					})
 				})
@@ -289,7 +290,7 @@ describe('core', ()=>{
 		);
 	});
 	it('destroy', ()=>{
-		const nextState = destroy(state, ['users', '1', 'subusers', '2']);
+		const nextState = destroy(state, ['users', '1', 'subusers'], 2);
 		expect(nextState).to.equal(
 			Map({
 				users: OrderedMap({
