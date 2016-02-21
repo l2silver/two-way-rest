@@ -1,7 +1,11 @@
 import {expect} from 'chai';
 import {
 	create
+	, index
+	, show
 	, createError
+	, substateCreate
+	, cleanSubstate
 	, update
 	, destroy
 	, checkTreeExists
@@ -9,7 +13,7 @@ import {
 	, convertArrayToOrderedMap
 	, fromJSOrdered
 	, transformResponse
-	, substateCreate
+	
 } from './../lib/core';
 import {fromJS, Map, OrderedMap, List, Seq} from 'immutable';
 
@@ -186,90 +190,80 @@ describe('core', ()=>{
 				);
 			});
 		});
-		it('success', ()=>{
+		it('cleanSubstate', ()=>{
+			const tree = List(['users']);
+			const content = {id: 1, content: 'content', tree}
 			const state = Map({
-				users: OrderedMap()
-				, Substate: Map({
+				Substate: OrderedMap({
 					users: OrderedMap({
-						1: Map({
-							subusers: OrderedMap({
-								2: Map({
-									looks: 'good'
-									, 'id': 2
-									, tree: List(['users', '1', 'subusers'])
-								})
-							})
+						1: Map(content)
+					})
+				})
+			})
+			const nextState = cleanSubstate(state, content, tree)
+			expect(nextState).to.equal(
+				Map({
+					Substate: OrderedMap({
+						users: OrderedMap({
+							1: Map({id: 1, content: '', tree})
 						})
+					})
+				})
+			)
+		})
+		it('success', ()=>{
+
+			const tree = List(['users'])
+			const response = {looks: 'good', id: 2}
+			const content = {looks: 'good', id: 1}
+			const state = Map({
+				Substate: Map({
+					users: OrderedMap({
+						1: Map(content).merge({tree})
 					})
 				})
 			})	
-			const nextState = create(state, ['users', '1', 'subusers'], {looks: 'good', id: 2});
+			const nextState = create(state, tree, content, response);
 			expect(nextState).to.equal(
 				Map({
 					users: OrderedMap({
-						1: Map({
-							subusers: OrderedMap({
-								2: Map({
-									looks: 'good'
-									, 'id': 2 
-								})
-							})
-						})
+						2: Map(
+							response
+						).merge({tree})
 					}), 
-					Substate: Map()
-				})
-			);
-		});
-		it('createError no id', ()=>{		
-			const nextState = createError(state, ['users', '1', 'subusers'], {looks: 'good'}, [{name: 'required'}]);
-			const newId = nextState.getIn(['Substate', 'users', '1', 'subusers']).first().get('id');
-			expect(nextState).to.equal(
-				Map({
-					users: OrderedMap()
-					, Substate: Map({
+					Substate: Map({
 						users: OrderedMap({
-							1: Map({
-								subusers: OrderedMap().set(
-									newId
-									, Map({
-										looks: 'good'								
-										, id: newId
-										, errors: List([ Map({ "name": "required" })])
-									})
-								)
-							})
+							1: Map({id: 1, looks: ''}).merge({tree})
 						})
 					})
 				})
 			);
 		});
-		it('createError with id', ()=>{		
-			const nextState = createError(state, ['users', '1', 'subusers'], {looks: 'good', id: 10}, [{name: 'required'}]);
-			const newId = 10;
+		it('createError', ()=>{		
+			const tree = List(['users']);
+			const response = {errors: 'error'};
+			const content = {id: 1};
+			const state = Map({
+				Substate: OrderedMap({
+					users: OrderedMap({
+						1: Map({id: 1, tree})
+					})
+				})
+			})
+			const nextState = createError(state, tree, content, response);
 			expect(nextState).to.equal(
 				Map({
-					users: OrderedMap()
-					, Substate: Map({
+					Substate: OrderedMap({
 						users: OrderedMap({
-							1: Map({
-								subusers: OrderedMap().set(
-									newId
-									, Map({
-										looks: 'good'
-										, id: newId
-										, errors: List([ Map({ "name": "required" })])
-									})
-								)
-							})
+							1: Map({id: 1, tree}).merge(response)
 						})
 					})
 				})
-			);
+			)
 		});
 	});
 	
 	it('update', ()=>{
-
 		const state = Map({
 			users: OrderedMap()
 			, Substate: Map()
@@ -300,6 +294,32 @@ describe('core', ()=>{
 					})
 				})
 				, Substate: Map()
+			})
+		);
+	});
+	it('index', ()=>{
+		const state = Map();
+		const tree = List(['users']);
+		const response = [{id: 1}]
+		const nextState = index(state, tree, response);
+		expect(nextState).to.equal(
+			Map({
+				users: OrderedMap({
+					1: Map({id: 1, tree})
+				})
+			})
+		);
+	});
+	it('show', ()=>{
+		const state = Map();
+		const tree = List(['users', '1']);
+		const response = {id: 1}
+		const nextState = show(state, tree, response);
+		expect(nextState).to.equal(
+			Map({
+				users: OrderedMap({
+					1: Map({id: 1, tree})
+				})
 			})
 		);
 	});

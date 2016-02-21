@@ -1,9 +1,9 @@
 import {expect} from 'chai';
-import {Map, OrderedMap} from 'immutable';
+import {List, Map, OrderedMap} from 'immutable';
 import {combineSwitches, generateRestSwitch} from './../lib/reducers';
 
 
-describe.skip('mirrorRestReducers', ()=>{
+describe('mirrorRestReducers', ()=>{
 	it('combineSwitches', ()=>{
 		function simple(state, action){
 			return state*2
@@ -14,14 +14,15 @@ describe.skip('mirrorRestReducers', ()=>{
 	it('generateRestSwitch', ()=>{
 		const restSwitch = generateRestSwitch('example');
 		const state = Map();
+		const tree = List(['users', '1'])
 		const action = {
 			  type: 'example'
-			, tree: ['users']
-			, content: {
+			, tree
+			, response: {
 				name: 'example'
 				, id: 1
 			}
-			, verb: 'CREATE'
+			, verb: 'SHOW'
 
 		}
 		expect(restSwitch(state, action)).to.equal(
@@ -30,7 +31,7 @@ describe.skip('mirrorRestReducers', ()=>{
 					1: Map({
 						name: 'example'
 						, id: 1
-					})
+					}).merge({tree})
 				})
 			})
 		);
