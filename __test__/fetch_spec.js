@@ -14,7 +14,7 @@ nock(url)
   .put('/users')
   .reply(200, user);
 
-describe.only('fetch', ()=>{
+describe('fetch', ()=>{
 	it('get', (done)=>{
 		get('/users').then((body)=>{
 			expect(body.id).to.equal('pgte');
