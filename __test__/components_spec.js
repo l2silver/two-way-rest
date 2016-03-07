@@ -6,7 +6,7 @@ import {fromJS, Map, OrderedMap, List, Seq} from 'immutable';
 import {DeclareReducer, StupidTWRLink, StupidTWRIndex} from './../lib/components'
 import {renderIntoDocument, scryRenderedDOMComponentsWithTag, findRenderedDOMComponentWithClass, createRenderer, shallowRenderer} from 'react-addons-test-utils';
 import sd from 'skin-deep';
-describe.only('components', ()=>{
+describe('components', ()=>{
 	const instance = Map({
 			tree: List(['tests', '1'])
 			, id: 1

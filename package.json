@@ -39,7 +39,8 @@
     "react-router": "^2.0.0",
     "redux": "^3.3.1",
     "redux-thunk": "^1.0.3",
-    "superagent": "^1.8.0-beta.2"
+    "superagent": "^1.8.0-beta.2",
+    "superagent-promise": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",
@@ -51,7 +52,9 @@
     "chai-immutable": "^1.5.3",
     "jsdom": "^8.1.0",
     "mocha": "^2.4.5",
+    "nock": "^7.2.2",
     "pagitter": "0.0.2",
+    "promise": "^7.1.1",
     "react-addons-test-utils": "^0.14.7",
     "skin-deep": "^0.14.0"
   }
