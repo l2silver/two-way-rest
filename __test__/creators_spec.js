@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {setAddress} from './../lib/fetch';
 setAddress('http://localhost:2000');
-import {getContent, calls, corePOST, coreGET} from './../lib/creators';
+import {getContent, calls, corePOST, coreGET, arrayRegex, convertToArrayIf} from './../lib/creators';
 import {fromJS, Map, OrderedMap, Is, List, Seq} from 'immutable';
 import jsdom from 'jsdom';
 import nock from 'nock';
@@ -12,9 +12,11 @@ const responseObject = {
                  }
 
 describe('creators', ()=>{
-	const document = jsdom.jsdom('<form id="testForm"><p></p><input type="hidden" name="test" value="testValue" /></form>');
-	const reducer = 'test';
+	const document = jsdom.jsdom(`<form id="testForm">
+		<input type="hidden" name="test" value="testValue" />
+	</form>`);
 	const form = document.getElementById('testForm');
+	const reducer = 'test';
 	const tree = List(['tests'])
 	const args = Map({
 		form,
@@ -36,9 +38,45 @@ describe('creators', ()=>{
 			});
 		})
 	})
-	it('getContent', ()=>{
-		expect(getContent(args.get('form'))).to.equal(Map({test: 'testValue'}))
+	describe.only('getContent', ()=>{
+		it('simple', ()=>{
+			expect(getContent(args.get('form'))).to.equal(Map({test: 'testValue'}))
+		})
+		it('complex', ()=>{
+			const document = jsdom.jsdom(`<form id="testForm">
+			<input type="hidden" name="test[]" value="testValue" />
+		</form>`);
+			const form = document.getElementById('testForm');
+			const nextArgs = args.set('form', form);
+			expect(getContent(nextArgs.get('form'))).to.equal(
+				Map({test: 
+					Map().set(0, 'testValue')
+				})
+			)
+		})
+		it('very complex', ()=>{
+			const document = jsdom.jsdom(`<form id="testForm">
+			<input type="hidden" name="test[1][weight]" value="testValue" />
+			<input type="hidden" name="test[1][height]" value="testValue" />
+		</form>`);
+			const form = document.getElementById('testForm');
+			const nextArgs = args.set('form', form);
+			expect(getContent(nextArgs.get('form'))).to.equal(Map({test: 
+					Map().set('1', Map().merge({weight: 'testValue', height: 'testValue'})
+					)
+				}))
+		})
+		it('regexArray', ()=>{
+			expect('test[]'.match(arrayRegex)[0]).to.equal('[]');
+		})
+		it('convertToArrayIf', ()=>{
+			expect(convertToArrayIf(Map(), 'test[]', 'testValue')).to.equal(Map({test: 
+					Map().set(0, 'testValue')
+				})
+			)
+		})
 	})
+	
 	describe('corePost', ()=>{
 		it('dispatches create', (done)=>{
 			nock('http://localhost:2000')
