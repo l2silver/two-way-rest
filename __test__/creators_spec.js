@@ -66,6 +66,17 @@ describe('creators', ()=>{
 					)
 				}))
 		})
+		it('less very complex', ()=>{
+			const document = jsdom.jsdom(`<form id="testForm">
+			<input type="hidden" name="test[weight]" value="testValue" />
+			<input type="hidden" name="test[height]" value="testValue" />
+		</form>`);
+			const form = document.getElementById('testForm');
+			const nextArgs = args.set('form', form);
+			expect(getContent(nextArgs.get('form'))).to.equal(Map({test: 
+					Map().merge({weight: 'testValue', height: 'testValue'})
+				}))
+		})
 		it('regexArray', ()=>{
 			expect('test[]'.match(arrayRegex)[0]).to.equal('[]');
 		})
