@@ -154,6 +154,7 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		}
 		return urlPath(this.tree());
 	}
+
 });
 
 var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
