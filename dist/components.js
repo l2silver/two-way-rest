@@ -3,21 +3,19 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.MRFormDestroy = exports.MRXUpdate = exports.MRFormUpdate = exports.MRFormCreateChild = exports.MRFormCreate = exports.MRIndex = exports.MRFormCreateTwo = exports.RestXForm = exports.RestForm = exports.StupidMRFormDestroy = exports.StupidMRXUpdate = exports.StupidMRFormUpdate = exports.StupidMRFormCreateChild = exports.StupidMRFormCreate = exports.StupidMRIndex = exports.DeclareReducer = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+exports.TWRDestroy = exports.TWRXUpdate = exports.TWRUpdate = exports.TWRCreateChild = exports.TWRCreate = exports.TWRLink = exports.TWRShowFront = exports.TWRShow = exports.TWRIndex = exports.TWRBreadCrumbs = exports.StupidTWRLink = exports.StupidTWRBreadCrumbs = exports.StupidTWRCreateChild = exports.StupidTWRCreate = exports.StupidTWRShowFront = exports.DeclareReducer = exports.StupidTWRShow = exports.StupidTWRIndex = exports.StupidTWRDestroy = exports.StupidTWRXUpdate = exports.StupidTWRUpdate = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-exports.convertTree = convertTree;
 
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
 var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _reactRouter = require('react-router');
 
 var _reactRedux = require('react-redux');
 
@@ -27,29 +25,64 @@ var _creators = require('./creators');
 
 var actionCreators = _interopRequireWildcard(_creators);
 
+var _componentHelpers = require('./componentHelpers');
+
 var _i = require('i');
 
 var _i2 = _interopRequireDefault(_i);
+
+var _componentProperties = require('./componentProperties');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
 var i = (0, _i2.default)(true);
 
-function convertTree(tree) {
-	if (Object.prototype.toString.call(tree) === '[object Array]') {
-		return tree;
-	} else {
-		return (0, _immutable.Map)(tree).toList().toJS();
+var StupidTWRUpdate = exports.StupidTWRUpdate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderProperties).merge({
+	getId: function getId() {
+		return this.props.instance.get('id');
+	},
+	tree: function tree() {
+		return (0, _immutable.List)(this.props.instance.get('tree')).unshift('Substate');
+	},
+	submitForm: function submitForm(event) {
+		var _this = this;
+
+		event.preventDefault();
+		this.props.update((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
+			return content.set('id', _this.getId());
+		}));
+	},
+	path: function path() {
+		return (0, _componentProperties.urlPath)(this.tree().shift());
 	}
-}
+}).toJS());
+
+var StupidTWRXUpdate = exports.StupidTWRXUpdate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostProperties).merge(_componentProperties.defaultPostRenderClickProperties).merge({
+	submitForm: function submitForm(event) {
+		event.preventDefault();
+		this.props.updateFront((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+	}
+}).toJS());
+
+var StupidTWRDestroy = exports.StupidTWRDestroy = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostProperties).merge(_componentProperties.defaultPostRenderClickProperties).merge({
+	submitForm: function submitForm(event) {
+		event.preventDefault();
+		this.props.destroy((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+	}
+}).toJS());
+
+var StupidTWRIndex = exports.StupidTWRIndex = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetProperties).merge({
+	mount: function mount() {
+		return this.props.index((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+	}
+}).toJS());
+var StupidTWRShow = exports.StupidTWRShow = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetProperties).merge({
+	mount: function mount() {
+		return this.props.show((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+	}
+}).toJS());
 
 var DeclareReducer = exports.DeclareReducer = _react2.default.createClass({
 	displayName: 'DeclareReducer',
@@ -58,7 +91,9 @@ var DeclareReducer = exports.DeclareReducer = _react2.default.createClass({
 		reducer: _react2.default.PropTypes.string.isRequired
 	},
 	getChildContext: function getChildContext() {
-		return { reducer: this.props.reducer };
+		return {
+			reducer: this.props.reducer
+		};
 	},
 	render: function render() {
 		return _react2.default.createElement(
@@ -69,214 +104,164 @@ var DeclareReducer = exports.DeclareReducer = _react2.default.createClass({
 	}
 });
 
-var StupidMRIndex = exports.StupidMRIndex = _react2.default.createClass({
-	displayName: 'StupidMRIndex',
+var StupidTWRShowFront = exports.StupidTWRShowFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetRenderProperties).toJS());
 
-	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
-	},
-	componentDidMount: function componentDidMount() {
-		console.log('hello good morning from stupid mri component did mount', this.context.reducer);
-		console.log('tree type', _typeof(this.props.tree));
-		console.log('tree type', this.props.tree);
-
-		this.props.index(this.context.reducer, convertTree(this.props.tree), (0, _reactDom.findDOMNode)(this));
-	},
-	render: function render() {
-		return _react2.default.createElement(
-			'form',
-			null,
-			this.props.children
-		);
+var StupidTWRCreate = exports.StupidTWRCreate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
+	tree: function tree() {
+		return (0, _immutable.List)(this.props.tree).unshift('Substate').push(this.getId());
 	}
-});
+}).toJS());
 
-var StupidMRFormCreate = exports.StupidMRFormCreate = _react2.default.createClass({
-	displayName: 'StupidMRFormCreate',
-
-	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
+var StupidTWRCreateChild = exports.StupidTWRCreateChild = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
+	tree: function tree() {
+		return (0, _immutable.List)(this.props.instance.get('tree')).unshift('Substate').push(this.props.childName).push(this.getId());
 	},
 	submitForm: function submitForm(event) {
+		var _this2 = this;
+
 		event.preventDefault();
-		this.props.create(this.context.reducer, convertTree(this.props.tree), event.target);
-	},
-	render: function render() {
-		return _react2.default.createElement(RestForm, _extends({}, this.props, { submitForm: this.submitForm }));
+		var tree = this.props.instance.get('tree');
+		var parentInstanceName = tree.pop().last();
+		this.props.create((0, _componentProperties.createArgs)(this, event.target).update('content', function (content) {
+			return content.set('id', _this2.getId()).set(parentInstanceName.singularize + '_id', _this2.props.instance.get('id').toString());
+		}));
 	}
-});
+}).toJS());
 
-var StupidMRFormCreateChild = exports.StupidMRFormCreateChild = _react2.default.createClass({
-	displayName: 'StupidMRFormCreateChild',
-
-	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
+var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.createClass(_componentProperties.defaultProperties.merge({
+	getCurrentTree: function getCurrentTree(start, currentValue) {
+		var fullUrl = (0, _immutable.List)(window.location.href.split('/'));
+		var index = fullUrl.indexOf(start);
+		var currentIndex = fullUrl.indexOf(currentValue);
+		var url = fullUrl.slice(index + 1, currentIndex + 1);
+		return url;
 	},
-	submitForm: function submitForm(event) {
-		event.preventDefault();
-		console.log('CreatreChildTree', this.props.tree);
-		var tree = (0, _immutable.List)(convertTree(this.props.tree)).unshift('Substate');
-		console.log('CreatreChildTree', tree);
-		this.props.create(this.context.reducer, tree.concat([this.props.id.toString(), this.props.childName]).toArray(), event.target, this.props.callback);
+	convertCurrentValueToName: function convertCurrentValueToName(currentValue) {
+		if (_typeof(currentValue.split('_')) == 'object') {
+			return (0, _immutable.List)(currentValue.split('_')).toSeq().map(function (part) {
+				return part.titleize;
+			}).toArray().join(' ');
+			return;
+		} else {
+			return currentValue.capitalize;
+		}
 	},
-	render: function render() {
-		var tree = (0, _immutable.List)(convertTree(this.props.tree));
-		var objectModelName = tree.last();
-		return _react2.default.createElement(
-			'form',
-			{ onSubmit: this.submitForm },
-			this.props.children,
-			_react2.default.createElement('input', { type: 'hidden', name: 'id', value: '' }),
-			_react2.default.createElement('input', { type: 'hidden', name: objectModelName.singularize + '_id', value: this.props.id.toString() })
-		);
-	}
-});
-
-var StupidMRFormUpdate = exports.StupidMRFormUpdate = _react2.default.createClass({
-	displayName: 'StupidMRFormUpdate',
-
-	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
-	},
-	submitForm: function submitForm(event) {
-		event.preventDefault();
-		this.props.update(this.context.reducer, convertTree(this.props.tree), event.target);
-	},
-	render: function render() {
-		return _react2.default.createElement(RestForm, _extends({}, this.props, { submitForm: this.submitForm }));
-	}
-});
-
-var StupidMRXUpdate = exports.StupidMRXUpdate = _react2.default.createClass({
-	displayName: 'StupidMRXUpdate',
-
-	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
-	},
-	submitForm: function submitForm(event) {
-		event.preventDefault();
-		console.log('MRXUpdate', this.context.reducer);
-		this.props.updateFront(this.context.reducer, convertTree(this.props.tree), (0, _reactDom.findDOMNode)(this));
-	},
-	render: function render() {
-		return _react2.default.createElement(RestXForm, _extends({}, this.props, { submitForm: this.submitForm }));
-	}
-});
-
-var StupidMRFormDestroy = exports.StupidMRFormDestroy = _react2.default.createClass({
-	displayName: 'StupidMRFormDestroy',
-
-	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
-	},
-	submitForm: function submitForm(event) {
-		event.preventDefault();
-		this.props.destroy(this.context.reducer, convertTree(this.props.tree), (0, _reactDom.findDOMNode)(this));
-	},
-	render: function render() {
-		return _react2.default.createElement(RestXForm, _extends({}, this.props, { submitForm: this.submitForm }));
-	}
-});
-
-var RestForm = exports.RestForm = function (_Component) {
-	_inherits(RestForm, _Component);
-
-	function RestForm() {
-		_classCallCheck(this, RestForm);
-
-		return _possibleConstructorReturn(this, Object.getPrototypeOf(RestForm).apply(this, arguments));
-	}
-
-	_createClass(RestForm, [{
-		key: 'render',
-		value: function render() {
+	generateNameLink: function generateNameLink(currentValue, originTree, index) {
+		var currentTree = this.getCurrentTree(this.context.reducer, currentValue);
+		var linkProps = this.props.map[currentValue];
+		if (linkProps && linkProps.return !== false) {
 			return _react2.default.createElement(
-				'form',
-				{ onSubmit: this.props.submitForm.bind(this) },
-				this.props.children,
-				_react2.default.createElement('input', { type: 'hidden', name: 'id', value: this.props.id })
+				'li',
+				null,
+				_react2.default.createElement(
+					_reactRouter.Link,
+					{ to: this.context.reducer + '/' + currentTree.join('/') + linkProps.return },
+					this.convertCurrentValueToName(currentValue)
+				)
 			);
 		}
-	}]);
+	},
+	generateIdLink: function generateIdLink(currentValue, originTree, index) {
+		var lastValue = originTree[index - 1];
+		var currentTree = this.getCurrentTree(this.context.reducer, lastValue).push(currentValue);
+		var linkProps = this.props.map[lastValue];
 
-	return RestForm;
-}(_react.Component);
-
-var RestXForm = exports.RestXForm = function (_Component2) {
-	_inherits(RestXForm, _Component2);
-
-	function RestXForm() {
-		_classCallCheck(this, RestXForm);
-
-		return _possibleConstructorReturn(this, Object.getPrototypeOf(RestXForm).apply(this, arguments));
-	}
-
-	_createClass(RestXForm, [{
-		key: 'render',
-		value: function render() {
+		if (linkProps && linkProps.id !== false) {
 			return _react2.default.createElement(
-				'div',
-				{ className: 'X', onClick: this.props.submitForm.bind(this) },
-				this.props.children,
-				_react2.default.createElement('input', { type: 'hidden', name: 'id', value: this.props.id })
+				'li',
+				null,
+				_react2.default.createElement(
+					_reactRouter.Link,
+					{ to: this.context.reducer + '/' + currentTree.join('/') + linkProps.id },
+					this.page().getIn(currentTree.push('name'))
+				)
 			);
 		}
-	}]);
+	},
+	generateLink: function generateLink(currentValue, originTree, index) {
+		if (isNaN(currentValue)) {
+			return this.generateNameLink(currentValue, originTree, index);
+		} else {
+			return this.generateIdLink(currentValue, originTree, index);
+		}
+	},
+	generateLinks: function generateLinks() {
+		var _this3 = this;
 
-	return RestXForm;
-}(_react.Component);
+		var tree = (0, _componentProperties.getTree)(this.context.reducer).toArray();
+		return tree.map(function (currentValue, index, originTree) {
+			if (index + 1 != originTree.length) {
+				return _this3.generateLink(currentValue, originTree, index);
+			}
+		});
+	},
+	checkArrayEmpty: function checkArrayEmpty(array) {
+		return array.reduce(function (boolean, value) {
+			if (!boolean) {
+				return value;
+			}
+			return true;
+		}, false);
+	},
+
+	render: function render() {
+		if (this.checkArrayEmpty(this.generateLinks())) {
+			return _react2.default.createElement(
+				'ol',
+				{ className: 'breadcrumb' },
+				this.generateLinks()
+			);
+		} else {
+			return _react2.default.createElement('div', { style: { display: 'none' } });
+		}
+	}
+}).toJS());
+
+var StupidTWRLink = exports.StupidTWRLink = _react2.default.createClass(_componentProperties.defaultProperties.merge({
+	rest: function rest() {
+		if (this.props.rest) {
+			return '/' + this.props.rest;
+		}
+		return '';
+	},
+	to: function to() {
+		return this.context.reducer + '/' + this.tree().join('/') + this.rest();
+	},
+	render: function render() {
+		if (this.instance()) {
+			return _react2.default.createElement(
+				_reactRouter.Link,
+				{ to: this.to() },
+				this.props.children
+			);
+		} else {
+			return _react2.default.createElement('a', null);
+		}
+	}
+}).toJS());
 
 function mapStateToProps(state) {
-	return {};
+	return {
+		state: state
+	};
 }
 
-var MRFormCreateTwo = exports.MRFormCreateTwo = function (_Component3) {
-	_inherits(MRFormCreateTwo, _Component3);
+var TWRBreadCrumbs = exports.TWRBreadCrumbs = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRBreadCrumbs);
 
-	function MRFormCreateTwo() {
-		_classCallCheck(this, MRFormCreateTwo);
+var TWRIndex = exports.TWRIndex = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRIndex);
 
-		return _possibleConstructorReturn(this, Object.getPrototypeOf(MRFormCreateTwo).apply(this, arguments));
-	}
+var TWRShow = exports.TWRShow = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRShow);
 
-	_createClass(MRFormCreateTwo, [{
-		key: 'render',
-		value: function render() {
-			var _this4 = this;
+var TWRShowFront = exports.TWRShowFront = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRShowFront);
 
-			if (this.props.substate && this.props.substate.hasIn([this.props.tree])) {
-				return this.props.substate.get('AssembliesCategories').map(function (AssembliesCategory) {
-					return _react2.default.createElement(
-						MRFormCreate,
-						_this4.props,
-						_this4.props.children
-					);
-				});
-			} else {
-				return _react2.default.createElement(
-					'span',
-					null,
-					_react2.default.createElement(
-						MRFormCreate,
-						this.props,
-						this.props.children
-					)
-				);
-			}
-		}
-	}]);
+var TWRLink = exports.TWRLink = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRLink);
 
-	return MRFormCreateTwo;
-}(_react.Component);
+var TWRCreate = exports.TWRCreate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRCreate);
 
-var MRIndex = exports.MRIndex = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidMRIndex);
+var TWRCreateChild = exports.TWRCreateChild = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRCreateChild);
 
-var MRFormCreate = exports.MRFormCreate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidMRFormCreate);
+var TWRUpdate = exports.TWRUpdate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRUpdate);
 
-var MRFormCreateChild = exports.MRFormCreateChild = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidMRFormCreateChild);
+var TWRXUpdate = exports.TWRXUpdate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRXUpdate);
 
-var MRFormUpdate = exports.MRFormUpdate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidMRFormUpdate);
-
-var MRXUpdate = exports.MRXUpdate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidMRXUpdate);
-
-var MRFormDestroy = exports.MRFormDestroy = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidMRFormDestroy);
+var TWRDestroy = exports.TWRDestroy = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRDestroy);

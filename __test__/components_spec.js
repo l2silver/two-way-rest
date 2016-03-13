@@ -72,7 +72,7 @@ describe('components', ()=>{
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
 		  		expect(ins.instance()).to.equal(state.test.get('tests'));
-			});	
+			});
 			describe('get', ()=>{
 				function index(args){
 						return args
@@ -86,6 +86,16 @@ describe('components', ()=>{
 			  		expect(ins.url).to.equal(undefined);
 				});
 				it('fire index creator on mount', ()=>{
+					function index(args){
+						expect(args.get('reducer')).to.equal('test');
+					}
+					const renderedComponent = renderIntoDocument(
+					  <DeclareReducer reducer='test'>
+					  	<StupidTWRIndex tree={['tests']} state={state} index={index}></StupidTWRIndex>
+					  </DeclareReducer>
+					);
+				});
+				it('change oldTree state', ()=>{
 					function index(args){
 						expect(args.get('reducer')).to.equal('test');
 					}
