@@ -185,7 +185,7 @@ describe('core', ()=>{
 					})
 				})
 			})
-			const nextState = cleanSubstate(state, content, tree)
+			const nextState = cleanSubstate(state, tree)
 			expect(nextState).to.equal(
 				Map({
 					Substate: OrderedMap({
@@ -200,7 +200,7 @@ describe('core', ()=>{
 
 			const tree = List(['Substate', 'users', '12345'])
 			const response = {looks: 'good', id: 2}
-			const content = {looks: 'good', id: '12345'}
+			const content = Map({looks: 'good', id: '12345'})
 			const state = Map({
 				Substate: Map({
 					users: OrderedMap({
@@ -208,7 +208,7 @@ describe('core', ()=>{
 					})
 				})
 			})	
-			const nextState = create(state, tree, content, response);
+			const nextState = create(state, tree, content, response, List(['users', '2']));
 			expect(nextState).to.equal(
 				Map({
 					Substate: Map({
@@ -251,25 +251,45 @@ describe('core', ()=>{
 	it('update', ()=>{
 		const state = Map({
 			users: OrderedMap()
-			, Substate: Map()
+			, Substate: Map({
+				users: OrderedMap({
+					1: Map({id: 1, looks: 'not great'})
+				})
+			})
 		})
 
-		const nextState = update(state, List(['Substate','users', '1']), {looks: 'alright', id: 1});
+		const nextState = update(state, List(['Substate','users', '1']), Map({looks: 'alright', id: 1}), {}, List(['users', '1']));
 		expect(nextState).to.equal(
 			Map({
 				users: OrderedMap({
 					'1': Map({looks: 'alright', id: 1})
 				})
-				, Substate: Map()
+				, Substate: Map({
+					users: OrderedMap({
+						1: Map({id: 1, looks: ''})
+					})
+				})
 			})
 		);
 	});
 	it('destroy', ()=>{
-		const nextState = destroy(state, ['users', '1'], 1);
+		const state = Map({
+			users: OrderedMap()
+			, Substate: Map({
+				users: OrderedMap({
+					1: Map({id: 1, looks: 'not great'})
+				})
+			})
+		})
+		const nextState = destroy(state, ['Substate','users', '1'], ['users', '1']);
 		expect(nextState).to.equal(
 			Map({
 				users: OrderedMap({})
-				, Substate: Map()
+				, Substate: Map({
+					users: OrderedMap({
+						1: Map({id: 1, looks: ''})
+					})
+				})
 			})
 		);
 	});

@@ -12,22 +12,20 @@ exports.transformResponse = transformResponse;
 exports.transformObject = transformObject;
 exports.convertArrayToOrderedMap = convertArrayToOrderedMap;
 exports.fromJSOrdered = fromJSOrdered;
-exports.index = index;
+exports.setMaps = setMaps;
+exports.checkTreeExists = checkTreeExists;
 exports.setIndex = setIndex;
 exports.setShow = setShow;
+exports.index = index;
 exports.show = show;
 exports.substateCreate = substateCreate;
 exports.substateDelete = substateDelete;
 exports.create = create;
+exports.update = update;
+exports.destroy = destroy;
 exports.cleanSubstate = cleanSubstate;
 exports.createError = createError;
-exports.createErrorContent = createErrorContent;
-exports.update = update;
 exports.updateFront = updateFront;
-exports.destroy = destroy;
-exports.setMaps = setMaps;
-exports.checkTreeExists = checkTreeExists;
-exports.createId = createId;
 
 var _immutable = require('immutable');
 
@@ -86,98 +84,6 @@ function fromJSOrdered(js) {
 	return (typeof js === 'undefined' ? 'undefined' : _typeof(js)) !== 'object' || js === null ? js : Array.isArray(js) ? convertArrayToOrderedMap(js, fromJSOrdered) : (0, _immutable.Seq)(js).map(fromJSOrdered).toMap();
 }
 
-function index(state, tree, response) {
-	var ListTree = (0, _immutable.List)(tree);
-	return setMaps(state, ListTree).mergeDeepIn(ListTree, transformResponse(response, tree));
-}
-
-function setIndex(state, tree) {
-	var ListTree = (0, _immutable.List)(tree);
-	var nextState = setMaps(state, ListTree).setIn((0, _componentHelpers.checkIndex)(ListTree), true);
-	return nextState;
-}
-
-function setShow(state, tree) {
-	var ListTree = (0, _immutable.List)(tree);
-	return setMaps(state, ListTree).setIn((0, _componentHelpers.checkShow)(ListTree), true);
-}
-
-function show(state, tree, response) {
-	var ListTree = tree;
-	return setMaps(state, ListTree).mergeIn(ListTree, transformResponse(response, tree.pop()));
-}
-
-function substateCreate(state, tree, content) {
-	var ListTreeWithId = tree;
-	return setMaps(state, ListTreeWithId).mergeDeepIn(ListTreeWithId, (0, _immutable.Map)(content).merge({ tree: (0, _immutable.List)(tree) }));
-}
-
-function substateDelete(state, tree, content) {
-	var ListTreeWithId = tree;
-	return setMaps(state, ListTreeWithId).deleteIn(ListTreeWithId);
-}
-
-function create(state, tree, content, response, postContent) {
-	var cleanedSubstate = cleanSubstate(state, content, tree);
-	var ListTreeWithId = tree.shift().pop().push(response.id.toString());
-	return setMaps(cleanedSubstate, ListTreeWithId).setIn(ListTreeWithId, transformResponse(response, ListTreeWithId.pop()).merge(postContent));
-}
-
-function cleanSubstate(state, content, ListTree, postContent) {
-	var SubstateListTree = ListTree;
-	var cloneElement = state.getIn(SubstateListTree);
-	var cleanCloneElement = cloneElement.toSeq().mapEntries(function (_ref5) {
-		var _ref6 = _slicedToArray(_ref5, 2);
-
-		var k = _ref6[0];
-		var v = _ref6[1];
-
-		if (k == 'tree' || k == 'id') {
-			return [k, v];
-		} else {
-			return [k, ''];
-		}
-	}).toMap();
-	return state.setIn(SubstateListTree, cleanCloneElement.merge(postContent));
-}
-
-function createError(state, tree, content, response) {
-	return state.mergeDeepIn(tree, content.merge(response));
-}
-
-function createErrorContent(content, response) {
-	if (content.id) {
-		return (0, _immutable.Map)(content).set('errors', response);
-	} else {
-		var id = createId();
-		return (0, _immutable.Map)(content).merge({
-			id: id,
-			errors: response
-		});
-	}
-}
-
-function update(state, tree, content) {
-	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-
-	var ListTree = tree.shift();
-	var updatedState = setMaps(state, ListTree).mergeDeepIn(ListTree, (0, _immutable.Map)(content).mergeDeep(transformResponse(response, ListTree.pop())));
-	return updatedState;
-}
-
-function updateFront(state, tree, content) {
-	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-
-	var ListTree = tree;
-	return setMaps(state, ListTree).mergeDeepIn(ListTree, (0, _immutable.Map)(content).merge(response));
-}
-
-function destroy(state, tree, id) {
-	var ListTree = (0, _immutable.List)(tree);
-	var ListTreeWithId = ListTree;
-	return setMaps(state, ListTreeWithId).deleteIn(ListTreeWithId);
-}
-
 function setMaps(state, tree) {
 	var stateTree = tree.reduce(function (stateTree, tree) {
 		var trees = stateTree.get('trees').push(tree);
@@ -206,6 +112,89 @@ function checkTreeExists(state, trees, tree) {
 	}
 }
 
-function createId() {
-	return Math.random().toString().slice(3);
+function setIndex(state, tree) {
+	var ListTree = (0, _immutable.List)(tree);
+	var nextState = setMaps(state, ListTree).setIn((0, _componentHelpers.checkIndex)(ListTree), true);
+	return nextState;
+}
+
+function setShow(state, tree) {
+	var ListTree = (0, _immutable.List)(tree);
+	return setMaps(state, ListTree).setIn((0, _componentHelpers.checkShow)(ListTree), true);
+}
+
+function index(state, tree, response) {
+	var ListTree = (0, _immutable.List)(tree);
+	return setMaps(state, ListTree).mergeDeepIn(ListTree, transformResponse(response, tree));
+}
+
+function show(state, tree, response) {
+	var ListTree = tree;
+	return setMaps(state, ListTree).mergeIn(ListTree, transformResponse(response, tree.pop()));
+}
+
+function substateCreate(state, tree, content) {
+	var ListTreeWithId = tree;
+	return setMaps(state, ListTreeWithId).mergeDeepIn(ListTreeWithId, (0, _immutable.Map)(content).merge({ tree: (0, _immutable.List)(tree) }));
+}
+
+function substateDelete(state, tree, content) {
+	var ListTreeWithId = tree;
+	return setMaps(state, ListTreeWithId).deleteIn(ListTreeWithId);
+}
+
+function create(state, tree) {
+	var content = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
+	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+	var outTree = arguments[4];
+
+	var cleanedSubstate = cleanSubstate(state, tree);
+	return setMaps(cleanedSubstate, outTree).setIn(outTree, content.merge(transformResponse(response, outTree.pop())));
+}
+
+function update(state, tree) {
+	var content = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
+	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+	var outTree = arguments[4];
+
+	var cleanedSubstate = cleanSubstate(state, tree);
+	var updatedState = setMaps(cleanedSubstate, outTree).mergeDeepIn(outTree, content.mergeDeep(transformResponse(response, outTree.pop())));
+	return updatedState;
+}
+
+function destroy(state, tree, outTree) {
+	var cleanedSubstate = cleanSubstate(state, tree);
+	return setMaps(cleanedSubstate, outTree).deleteIn(outTree);
+}
+
+function cleanSubstate(state, ListTree) {
+	var SubstateListTree = ListTree;
+	var cloneElement = state.getIn(SubstateListTree);
+	var cleanCloneElement = cloneElement.toSeq().mapEntries(function (_ref5) {
+		var _ref6 = _slicedToArray(_ref5, 2);
+
+		var k = _ref6[0];
+		var v = _ref6[1];
+
+		if (k == 'tree' || k == 'id') {
+			return [k, v];
+		} else {
+			return [k, ''];
+		}
+	}).toMap();
+	return state.setIn(SubstateListTree, cleanCloneElement);
+}
+
+function createError(state, tree) {
+	var content = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
+	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+	return state.mergeDeepIn(tree, content.merge(response));
+}
+
+function updateFront(state, tree, content) {
+	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+	var ListTree = tree;
+	return setMaps(state, ListTree).mergeDeepIn(ListTree, (0, _immutable.Map)(content).merge(response));
 }

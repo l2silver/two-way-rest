@@ -7,15 +7,14 @@ exports.showAction = showAction;
 exports.indexAction = indexAction;
 exports.indexErrorAction = indexErrorAction;
 exports.createAction = createAction;
-exports.substateDeleteAction = substateDeleteAction;
-exports.substateCreateAction = substateCreateAction;
 exports.createErrorAction = createErrorAction;
 exports.updateAction = updateAction;
-exports.updateFrontAction = updateFrontAction;
 exports.updateErrorAction = updateErrorAction;
+exports.substateDeleteAction = substateDeleteAction;
+exports.substateCreateAction = substateCreateAction;
 exports.destroyAction = destroyAction;
-exports.setIndexAction = setIndexAction;
-exports.setShowAction = setShowAction;
+exports.indexSetAction = indexSetAction;
+exports.showSetAction = showSetAction;
 function showAction(reducer, tree, response) {
 	return {
 		type: reducer,
@@ -44,13 +43,44 @@ function indexErrorAction(reducer, tree, content, response) {
 	};
 }
 
-function createAction(reducer, tree, content, response) {
+function createAction(reducer, tree, content, response, outTree) {
 	return {
 		type: reducer,
 		tree: tree,
 		content: content,
 		response: response,
-		verb: 'CREATE'
+		verb: 'CREATE',
+		outTree: outTree
+	};
+}
+function createErrorAction(reducer, tree, content, response) {
+	return {
+		type: reducer,
+		tree: tree,
+		content: content,
+		response: response,
+		verb: 'CREATE_ERROR'
+	};
+}
+
+function updateAction(reducer, tree, content, response, outTree) {
+	return {
+		type: reducer,
+		tree: tree,
+		content: content,
+		response: response,
+		verb: 'UPDATE',
+		outTree: outTree
+	};
+}
+
+function updateErrorAction(reducer, tree, content, response) {
+	return {
+		type: reducer,
+		tree: tree,
+		content: content,
+		response: response,
+		verb: 'UPDATE_ERROR'
 	};
 }
 
@@ -72,55 +102,16 @@ function substateCreateAction(reducer, tree, content) {
 	};
 }
 
-function createErrorAction(reducer, tree, content, response) {
+function destroyAction(reducer, tree, content, response, outTree) {
 	return {
 		type: reducer,
 		tree: tree,
-		content: content,
-		response: response,
-		verb: 'CREATE_ERROR'
+		verb: 'DESTROY',
+		outTree: outTree
 	};
 }
 
-function updateAction(reducer, tree, content, response) {
-	return {
-		type: reducer,
-		tree: tree,
-		content: content,
-		response: response,
-		verb: 'UPDATE'
-	};
-}
-
-function updateFrontAction(reducer, tree, content, response) {
-	return {
-		type: reducer,
-		tree: tree,
-		content: content,
-		response: response,
-		verb: 'UPDATE_FRONT'
-	};
-}
-
-function updateErrorAction(reducer, tree, content, response) {
-	return {
-		type: reducer,
-		tree: tree,
-		content: content,
-		response: response,
-		verb: 'UPDATE_ERROR'
-	};
-}
-function destroyAction(reducer, tree, id) {
-	return {
-		type: reducer,
-		tree: tree,
-		id: id,
-		verb: 'DESTROY'
-	};
-}
-
-function setIndexAction(reducer, tree) {
+function indexSetAction(reducer, tree) {
 	return {
 		type: reducer,
 		tree: tree,
@@ -128,7 +119,7 @@ function setIndexAction(reducer, tree) {
 	};
 }
 
-function setShowAction(reducer, tree) {
+function showSetAction(reducer, tree) {
 	return {
 		type: reducer,
 		tree: tree,

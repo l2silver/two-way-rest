@@ -1,8 +1,22 @@
 import {expect} from 'chai';
 import {setAddress} from './../lib/fetch';
 setAddress('http://localhost:2000');
-import {getContent, calls, corePOST, coreGET, arrayRegex, convertToArrayIf} from './../lib/creators';
+import {
+	getContent
+	, calls
+	, corePOST
+	, coreGET
+	, arrayRegex
+	, convertToArrayIf
+	, create
+	, update
+	, createEventTrain
+	, combineContent
+	, endPromises
+
+} from './../lib/creators';
 import {fromJS, Map, OrderedMap, Is, List, Seq} from 'immutable';
+import Promise from 'bluebird';
 import jsdom from 'jsdom';
 import nock from 'nock';
 
@@ -47,7 +61,7 @@ describe('creators', ()=>{
 			});
 		})
 	})
-	describe.only('getContent', ()=>{
+	describe('getContent', ()=>{
 		it('simple', ()=>{
 			expect(getContent(args.get('form'))).to.equal(Map({test: 'testValue'}))
 		})
@@ -97,10 +111,74 @@ describe('creators', ()=>{
 		})
 	})
 	
-	describe('corePost', ()=>{
+	
+	it('createsPromise', (done)=>{
+		const args = Map();
+		createEventTrain([args=>args])(args).then((args)=>{
+			expect(args).to.equal(Map());
+			return done();
+		})
 		
-		
-		it('dispatches create', (done)=>{
+	})
+	
+	it('combineContent', ()=>{
+		expect(combineContent(args)).to.equal(args.merge({
+			formContent: Map({test: 'testValue'})
+			, combinedContent: Map({test: 'testValue'})
+			})
+		)
+	})
+
+	describe('endPromises', ()=>{
+		it('catches error', (done)=>{
+			const combinedContent = Map();
+			const nextArgs = args.merge({dispatch, combinedContent, type: 'create'})
+
+			function dispatch(errorArgs){
+				expect(errorArgs.verb).to.equal('CREATE_ERROR');
+				return done();
+			}
+			endPromises(Promise.method((args)=>{
+				throw args.set('response', {})
+			})(nextArgs));
+		})
+		it('fire onFailureCB', (done)=>{
+			const combinedContent = Map();
+			function onErrorFn(errorArgs){
+				expect(errorArgs.get('type')).to.equal('create');
+				return errorArgs;
+			}
+			const nextArgs = args.merge({dispatch, combinedContent, type: 'create', onFailureCB: onErrorFn})
+
+			function dispatch(errorArgs){
+				return errorArgs;
+			}
+			endPromises(Promise.method((args)=>{
+				throw args.set('response', {})
+			})(nextArgs)).then(()=>{
+				return done()
+			});
+		})
+		it('fire callback', (done)=>{
+			const combinedContent = Map();
+			function callbackFn(cbargs){
+				expect(cbargs.get('type')).to.equal('create');
+				return cbargs;
+			}
+			const nextArgs = args.merge({dispatch, combinedContent, type: 'create', callback: callbackFn})
+
+			function dispatch(errorArgs){
+				return errorArgs;
+			}
+			endPromises(Promise.method((args)=>{
+				throw args.set('response', {})
+			})(nextArgs)).then(()=>{
+				return done()
+			});
+		})	
+	})
+	describe('create', ()=>{
+		it('success', (done)=>{
 			const content = Map({test: 'testValue'});
 			const path = '/tests'
 			const args = Map({
@@ -108,9 +186,9 @@ describe('creators', ()=>{
 				tree,
 				reducer,
 				content,
-				path
+				path,
+				outTree: tree
 			})
-			
 			function dispatch(action){
 				expect(action.verb).to.equal('CREATE');
 				expect(action.type).to.equal('test');
@@ -119,7 +197,7 @@ describe('creators', ()=>{
 				expect(action.tree).to.equal(args.get('tree'));
 				return done();
 			}
-			corePOST(args, 'create')(dispatch);
+			create(args)(dispatch);
 		});
 		
 		it('dispatches createError', (done)=>{
@@ -139,7 +217,7 @@ describe('creators', ()=>{
 				expect(action.response.errors).to.equal('Something went wrong');
 				return done();
 			}
-			corePOST(args, 'create')(dispatch);
+			create(args)(dispatch);
 		});
 	})
 	describe('coreGet', ()=>{
@@ -175,7 +253,7 @@ describe('creators', ()=>{
 				expect(action.type).to.equal('test');
 				expect(action.tree).to.equal(args.get('tree'));
 			}
-			coreGET(args, 'Index')(dispatch, getState).then(()=>{
+			coreGET(args, 'index')(dispatch, getState).then(()=>{
 				return done();
 			});
 		});
@@ -204,7 +282,7 @@ describe('creators', ()=>{
 				expect(action.tree).to.equal(args.get('tree'));
 				expect(action.content).to.equal(content);
 			}
-			coreGET(args, 'Index')(dispatch, getState).then(()=>{
+			coreGET(args, 'index')(dispatch, getState).then(()=>{
 				return done();
 			});
 		});
@@ -231,7 +309,7 @@ describe('creators', ()=>{
 				expect(action.type).to.equal('test');
 				expect(action.tree).to.equal(args.get('tree'));
 			}
-			coreGET(args, 'Index')(dispatch, getState).then(()=>{
+			coreGET(args, 'index')(dispatch, getState).then(()=>{
 				return done();
 			});
 		});
@@ -244,7 +322,7 @@ describe('creators', ()=>{
 			function dispatch(action){
 				return action;
 			}
-			expect(coreGET(args, 'Index')(dispatch, getState)).to.be.truth;
+			expect(coreGET(args, 'index')(dispatch, getState)).to.be.truth;
 		});
 	})
 });

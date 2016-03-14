@@ -26,16 +26,16 @@ Again, if successful, the form updates both the frontend and the backend.
 Suppose that instead of updating a user’s frontend and backend, you just wanted to update the frontend.
 
 ```
-<TWRXUpdate instance={userInstance}>
+<TWRUpdateFront instance={userInstance}>
 	<input type=’text’ name=’visible’ value=’true’ />
 	<input type=’submit’ />
-</TWRUpdate>
+</TWRUpdateFront>
 ```
 Now your frontend user has a new property(or updates an old property) called visible, and its value is true. 
 
 ## Motivation:
 
-When I started working with redux, I loved the structure, but hated the development speed. Something as simple as toggling a button meant changing the react component, the action creator and the reducer. This process also meant extracting the code away from the react components, which felt counter intuitive, since one of the advantages of react is the code being visible while constructing the DOM.
+I'm from the trenches. I build relatively simple websites for small businesses, where the priority is stability and development speed. When I started working with redux, I loved the structure, but hated the steps. Something as simple as toggling a button meant changing the react component, the action creator and the reducer. This process also meant extracting the code away from the react components, which felt counter intuitive, since one of the advantages of react is the code being visible while constructing the DOM. I built two-way-rest to solve these issues.
 
 ## Setup:
 

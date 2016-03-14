@@ -104,16 +104,17 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		return this.checkTreeChange();
 	},
 	checkTreeChange: function checkTreeChange() {
-		if (this.oldTree != this.tree) {
-			if (this.oldTree == undefined) {
-				this.mount();
-			} else {
-				this.unmount();
-				this.mount();
-			}
-			return this.oldTree = this.tree();
+		if ((0, _immutable.is)(this.oldTree, this.tree())) {
+			return false;
 		}
-		return false;
+		if (this.oldTree == undefined) {
+			this.mount();
+		} else {
+			this.unmount();
+			this.mount();
+		}
+		this.oldTree = this.tree();
+		return true;
 	},
 	page: function page() {
 		if (this.props.state) {
@@ -129,7 +130,6 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	},
 	tree: function tree() {
 		if (this.props.tree) {
-
 			return (0, _immutable.List)(this.props.tree);
 		}
 		if (this.props.instance) {
@@ -273,7 +273,14 @@ var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)(
 	}
 });
 
-var defaultPostCreateProperties = exports.defaultPostCreateProperties = (0, _immutable.Map)(defaultPostProperties).merge(defaultPostRenderProperties).merge(defaultCreateSubstate);
+var defaultPostCreateProperties = exports.defaultPostCreateProperties = (0, _immutable.Map)(defaultPostProperties).merge(defaultPostRenderProperties).merge(defaultCreateSubstate).merge({
+	outTree: function outTree() {
+		if (this.props.outTree) {
+			return (0, _immutable.List)(this.props.outTree);
+		}
+		return this.tree().shift().pop();
+	}
+});
 
 var defaultGetProperties = exports.defaultGetProperties = (0, _immutable.Map)({
 	mapIf: function mapIf(instances, mapFn, instead) {

@@ -7,8 +7,8 @@ exports.triggerSubmit = triggerSubmit;
 exports.mapIf = mapIf;
 exports.getTree = getTree;
 exports.getInstance = getInstance;
-exports.checkIndex = checkIndex;
-exports.checkShow = checkShow;
+exports.indexCheck = indexCheck;
+exports.showCheck = showCheck;
 exports.goToAfter = goToAfter;
 
 var _reactDom = require('react-dom');
@@ -46,11 +46,11 @@ function getInstance(url, page) {
 	return false;
 }
 
-function checkIndex(tree) {
+function indexCheck(tree) {
 	return tree.pop().push(tree.last() + 'TWRIndex');
 }
 
-function checkShow(tree) {
+function showCheck(tree) {
 	return tree.push('TWRShow');
 }
 

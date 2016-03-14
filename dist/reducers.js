@@ -30,7 +30,7 @@ function generateRestSwitch(reducer) {
 					case 'SET_SHOW':
 						return (0, _core.setShow)(state, action.tree, action.response);
 					case 'CREATE':
-						return (0, _core.create)(state, action.tree, action.content, action.response);
+						return (0, _core.create)(state, action.tree, action.content, action.response, action.outTree);
 					case 'SUBSTATE_CREATE':
 						return (0, _core.substateCreate)(state, action.tree, action.content);
 					case 'SUBSTATE_DELETE':
@@ -38,13 +38,11 @@ function generateRestSwitch(reducer) {
 					case 'CREATE_ERROR':
 						return (0, _core.createError)(state, action.tree, action.content, action.response);
 					case 'UPDATE':
-						return (0, _core.update)(state, action.tree, action.content, action.response);
-					case 'UPDATE_FRONT':
-						return (0, _core.updateFront)(state, action.tree, action.content, action.response);
+						return (0, _core.update)(state, action.tree, action.content, action.response, action.outTree);
 					case 'UPDATE_ERROR':
 						return (0, _core.update)(state, action.tree, action.content, action.response);
 					case 'DESTROY':
-						return (0, _core.destroy)(state, action.tree, action.id);
+						return (0, _core.destroy)(state, action.tree, action.outTree);
 					case 'DESTROY_ERROR':
 						return (0, _core.destroy)(state, action.tree);
 				}
