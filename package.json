@@ -9,7 +9,8 @@
     "build": "babel lib --out-file dist/index.js",
     "pgtR": "pgt -r",
     "pgtW": "pgt -w",
-    "pgt": "pgt"
+    "pgt": "pgt",
+    "build:watch": "babel lib --watch --out-dir dist"
   },
   "repository": {
     "type": "git",
@@ -33,10 +34,12 @@
     "inflection": "^1.8.0",
     "methods": "^1.1.2",
     "nock": "^7.2.2",
+    "promise": "^7.1.1",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
     "react-redux": "^4.4.0",
     "react-router": "^2.0.0",
+    "react-router-redux": "^4.0.0",
     "redux": "^3.3.1",
     "redux-thunk": "^1.0.3",
     "superagent": "^1.8.0-beta.2",

@@ -1,15 +1,38 @@
 import {expect} from 'chai';
 import {setAddress} from './../lib/fetch';
 setAddress('http://localhost:2000');
-import {getContent, calls, corePOST, coreGET, arrayRegex, convertToArrayIf} from './../lib/creators';
+import {
+	getContent
+	, calls
+	, corePOST
+	, coreGET
+	, arrayRegex
+	, convertToArrayIf
+	, create
+	, update
+	, createEventTrain
+	, combineContent
+	, endPromises
+
+} from './../lib/creators';
 import {fromJS, Map, OrderedMap, Is, List, Seq} from 'immutable';
+import Promise from 'bluebird';
 import jsdom from 'jsdom';
 import nock from 'nock';
 
 
 const responseObject = {
-                  id: 1,
+                  id: 1
                  }
+
+nock('http://localhost:2000')
+                .post('/tests')
+                .reply(200, responseObject);
+
+nock('http://localhost:2000')
+                .post('/tests_error')
+                .reply(200, {errors: 'Something went wrong'});
+
 
 describe('creators', ()=>{
 	const document = jsdom.jsdom(`<form id="testForm">
@@ -38,7 +61,7 @@ describe('creators', ()=>{
 			});
 		})
 	})
-	describe.only('getContent', ()=>{
+	describe('getContent', ()=>{
 		it('simple', ()=>{
 			expect(getContent(args.get('form'))).to.equal(Map({test: 'testValue'}))
 		})
@@ -88,39 +111,136 @@ describe('creators', ()=>{
 		})
 	})
 	
-	describe('corePost', ()=>{
-		it('dispatches create', (done)=>{
-			nock('http://localhost:2000')
-                .post('/tests')
-                .reply(200, responseObject);
+	
+	it('createsPromise', (done)=>{
+		const args = Map();
+		createEventTrain([args=>args])(args).then((args)=>{
+			expect(args).to.equal(Map());
+			return done();
+		})
+		
+	})
+	
+	it('combineContent', ()=>{
+		expect(combineContent(args)).to.equal(args.merge({
+			formContent: Map({test: 'testValue'})
+			, combinedContent: Map({test: 'testValue'})
+			})
+		)
+	})
+
+	describe('endPromises', ()=>{
+		it('catches error', (done)=>{
+			const combinedContent = Map();
+			const nextArgs = args.merge({dispatch, combinedContent, type: 'create'})
+
+			function dispatch(errorArgs){
+				expect(errorArgs.verb).to.equal('CREATE_ERROR');
+				return done();
+			}
+			endPromises(Promise.method((args)=>{
+				throw args.set('response', {})
+			})(nextArgs));
+		})
+		it('fire onFailureCB', (done)=>{
+			const combinedContent = Map();
+			function onErrorFn(errorArgs){
+				expect(errorArgs.get('type')).to.equal('create');
+				return errorArgs;
+			}
+			const nextArgs = args.merge({dispatch, combinedContent, type: 'create', onFailureCB: onErrorFn})
+
+			function dispatch(errorArgs){
+				return errorArgs;
+			}
+			endPromises(Promise.method((args)=>{
+				throw args.set('response', {})
+			})(nextArgs)).then(()=>{
+				return done()
+			});
+		})
+		it('fire callback', (done)=>{
+			const combinedContent = Map();
+			function callbackFn(cbargs){
+				expect(cbargs.get('type')).to.equal('create');
+				return cbargs;
+			}
+			const nextArgs = args.merge({dispatch, combinedContent, type: 'create', callback: callbackFn})
+
+			function dispatch(errorArgs){
+				return errorArgs;
+			}
+			endPromises(Promise.method((args)=>{
+				throw args.set('response', {})
+			})(nextArgs)).then(()=>{
+				return done()
+			});
+		})	
+	})
+	describe('create', ()=>{
+		it('success', (done)=>{
+			const content = Map({test: 'testValue'});
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path,
+				outTree: tree
+			})
 			function dispatch(action){
 				expect(action.verb).to.equal('CREATE');
 				expect(action.type).to.equal('test');
-				expect(action.content.test).to.equal('testValue');
+				expect(action.content.get('test')).to.equal('testValue');
 				expect(action.response.id).to.equal(responseObject.id);
 				expect(action.tree).to.equal(args.get('tree'));
 				return done();
 			}
-			corePOST(args, 'create')(dispatch);
+			create(args)(dispatch);
 		});
-		it('returns args', (done)=>{
-			nock('http://localhost:2000')
-                .post('/tests')
-                .reply(200, responseObject);
+		
+		it('dispatches createError', (done)=>{
+			const content = Map({test: 'testValue'});
+			const path = '/tests_error'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path
+			})
 			function dispatch(action){
-				return action;
+				expect(action.verb).to.equal('CREATE_ERROR');
+				expect(action.type).to.equal('test');
+				expect(action.content.get('test')).to.equal('testValue');
+				expect(action.response.errors).to.equal('Something went wrong');
+				return done();
 			}
-			corePOST(args, 'create')(dispatch).then((nextArgs)=>{
-				expect(nextArgs.delete('response')).to.equal(args);
-				return done()
-			});
-		})
+			create(args)(dispatch);
+		});
 	})
 	describe('coreGet', ()=>{
-		it('dispatches Set Index', (done)=>{
-			nock('http://localhost:2000')
+		
+        beforeEach(()=>{
+        	nock('http://localhost:2000')
+                .get('/tests_error')
+                .reply(200, {errors: 'Something went wrong'});
+        
+        	nock('http://localhost:2000')
                 .get('/tests')
                 .reply(200, [responseObject]);
+        })
+        
+
+		it('dispatches Set Index', (done)=>{			
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				path
+			})
 			const state = {test: Map()}
 			function getState(){
 				return state;
@@ -132,18 +252,55 @@ describe('creators', ()=>{
 				expect(action.verb).to.equal('SET_INDEX');
 				expect(action.type).to.equal('test');
 				expect(action.tree).to.equal(args.get('tree'));
-				return done();
 			}
-			coreGET(args, 'Index')(dispatch, getState);
+			coreGET(args, 'index')(dispatch, getState).then(()=>{
+				return done();
+			});
 		});
-		it('dispatches Index', (done)=>{
+		it('dispatches error', (done)=>{
+
+			const content = Map({test: 'testValue'});
+			const path = '/tests_error'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path
+			})
 			const state = {test: Map()}
 			function getState(){
 				return state;
 			}
-			nock('http://localhost:2000')
-                .get('/tests')
-                .reply(200, [responseObject]);
+			
+			function dispatch(action){
+				if(action.verb == 'SET_INDEX'){
+					return action;	
+				}
+				expect(action.verb).to.equal('CREATE_ERROR');
+				expect(action.type).to.equal('test');
+				expect(action.tree).to.equal(args.get('tree'));
+				expect(action.content).to.equal(content);
+			}
+			coreGET(args, 'index')(dispatch, getState).then(()=>{
+				return done();
+			});
+		});
+		it('dispatches Index', (done)=>{
+			const content = Map({test: 'testValue'});
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path
+			})
+			const state = {test: Map()}
+			function getState(){
+				return state;
+			}
+			
 			function dispatch(action){
 				if(action.verb == 'SET_INDEX'){
 					return action;	
@@ -151,26 +308,11 @@ describe('creators', ()=>{
 				expect(action.verb).to.equal('INDEX');
 				expect(action.type).to.equal('test');
 				expect(action.tree).to.equal(args.get('tree'));
-				return done();	
-				
 			}
-			coreGET(args, 'Index')(dispatch, getState);
-		});
-		it('returns args', (done)=>{
-			const state = {test: Map()}
-			function getState(){
-				return state;
-			}
-			nock('http://localhost:2000')
-                .get('/tests')
-                .reply(200, [responseObject]);
-			function dispatch(action){
-				return action;
-			}
-			coreGET(args, 'Index')(dispatch, getState).then((nextArgs)=>{
-				return done()
+			coreGET(args, 'index')(dispatch, getState).then(()=>{
+				return done();
 			});
-		})
+		});
 		it('returns true if get already set', ()=>{
 
 			const state = {test: Map({testsTWRIndex: 'true'})}
@@ -180,7 +322,7 @@ describe('creators', ()=>{
 			function dispatch(action){
 				return action;
 			}
-			expect(coreGET(args, 'Index')(dispatch, getState)).to.be.truth;
+			expect(coreGET(args, 'index')(dispatch, getState)).to.be.truth;
 		});
 	})
 });
