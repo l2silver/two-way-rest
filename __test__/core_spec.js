@@ -319,4 +319,82 @@ describe('core', ()=>{
 			})
 		);
 	});
+	it.only('proofOfConceot', ()=>{
+		function checkParam(state, param){
+			console.log('state', state);
+			if(state.has(param+'TWR')){
+				const getInstance = state.getX(param+'TWR');
+				if(List.isList(getInstance)){
+					return getInstance.reduce((orderedMap, id)=>{
+						const newInstance = state.page.getIn(['globe', 'livestateGlobe', param, id]);
+						if(newInstance){
+							newInstance.page = state.page;
+							return orderedMap.set(id, newInstance);
+						}
+						return orderedMap;
+					}, OrderedMap())
+				}
+				const nextInstance = state.page.getIn(['globe', 'livestateGlobe', param, getInstance]);
+				if(nextInstance){
+					nextInstance.page = state.page
+					return 	nextInstance;
+				}
+			}
+			return state.getX(param);
+		}
+		const page = fromJS({
+			globe: {
+				livestateGlobe: {
+					tests: {
+						1: {
+							id: 1
+							, fake_tests: [1]
+						}
+					},
+					fake_tests: {
+						1: {
+							id: 1
+							, fake_tests: [1]
+						}
+					},
+				},
+				substateGlobe: {
+
+				}
+			}
+		});
+
+		/*
+		function changeFn(setName, oldFn, newFn){
+			if(newFn){
+				const newInstance = Object.assign({}, this, {[setName]: newFn.bind(this)});
+				return mutableMap(newInstance);		
+			}
+			const nextInstance = Object.assign({}, this, {[setName]: this[oldFn]});
+			return mutableMap(nextInstance);
+		}
+		function mutableMap(instance){
+			return Object.assign({}, instance, {changeFn: changeFn.bind(instance)});
+		}
+
+		expect(Map({test: 'one'})).to.equal(1);
+
+		const instance = page.getIn(['globe', 'livestateGlobe', 'tests', '1']);
+		const newInstance = mutableMap(instance);
+		const nextInstance = newInstance
+		.changeFn('getX', 'get')
+		.changeFn('getInX', 'getIn');
+		
+		expect(nextInstance.getX('id')).to.equal(1);
+		const lastInstance = nextInstance.changeFn('getIn','',function(params){
+			return params.reduce((instance, param)=>{
+				return checkParam(instance, param);
+			}, this)
+		}).changeFn('get','',function(param){
+			return checkParam(this, param);
+		});
+		console.log('map', Map())
+		expect(lastInstance.get('id')).to.equal(1);
+		*/
+	});
 });
