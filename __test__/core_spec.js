@@ -319,61 +319,7 @@ describe('core', ()=>{
 			})
 		);
 	});
-	it.only('proofOfConceot', ()=>{
-		function checkParam(state, param){
-			console.log('state', state);
-			if(state.has(param+'TWR')){
-				const getInstance = state.getX(param+'TWR');
-				if(List.isList(getInstance)){
-					return getInstance.reduce((orderedMap, id)=>{
-						const newInstance = state.page.getIn(['globe', 'livestateGlobe', param, id]);
-						if(newInstance){
-							newInstance.page = state.page;
-							return orderedMap.set(id, newInstance);
-						}
-						return orderedMap;
-					}, OrderedMap())
-				}
-				const nextInstance = state.page.getIn(['globe', 'livestateGlobe', param, getInstance]);
-				if(nextInstance){
-					nextInstance.page = state.page
-					return 	nextInstance;
-				}
-			}
-			return state.getX(param);
-		}
-		
-/*
-How do we know we are at the end?
-We save the entry name
-Or do we return the last...
-
-All we need to do is return the last.
-If entry is last, then get.
-
-So suppose we haev the above scenario.
-
-['fake_tests', 1]
-
-test_template implies one, but we'll add an s if... we know that it used to contain an object with an id.
-
-So, the processing of the globe is very important. If 
-
-return an array.
-
-if last, get orderedMap, else{
-	dont do anything
-}
-
-if(integer or list, get previous){
-	fake_test, 1, give globe.
-}
-
-
-
-*/
-
-		
+	it('new Map Functions', ()=>{		
 		function checkTWREntries(_globe, _firstInstance, _tree){
 			const _lastInstance = _tree.reduce((_previousInstance, _entry, _index, array)=>{
 				const _instanceTWR = _previousInstance.get(_entry+'TWR');
@@ -441,38 +387,78 @@ if(integer or list, get previous){
 						}));
 
 	    expect(Map({tiger: {cat: 'lilly'}}).getIn('x', 'cool')).to.equal('cool');
+	});
 
-		/*
-		function changeFn(setName, oldFn, newFn){
-			if(newFn){
-				const newInstance = Object.assign({}, this, {[setName]: newFn.bind(this)});
-				return mutableMap(newInstance);		
+	it.only('new globe functions', ()=>{
+		const globe = Map({
+					tests: Map({
+						1: Map({
+							id: 1
+							, fake_testsTWR: List([1])
+						})
+					}),
+					fake_tests: Map({
+						1: Map({
+							id: 1
+							, fake_tests: List([1])
+						})
+					}),
+				});
+
+
+		const initialObject = {
+				id: 1
+				, fake_tests: [
+					{id: 1}
+				]
+			};
+
+
+/*
+
+	How does one return a root?
+	Each returns the globe, merged with itself. 
+
+
+
+*/
+
+
+		function mapState(js, globe){
+			if(typeof js !== 'object' || js === null){
+				return globe;
+			}else{
+				return mapObject(js, globe);
 			}
-			const nextInstance = Object.assign({}, this, {[setName]: this[oldFn]});
-			return mutableMap(nextInstance);
-		}
-		function mutableMap(instance){
-			return Object.assign({}, instance, {changeFn: changeFn.bind(instance)});
 		}
 
-		expect(Map({test: 'one'})).to.equal(1);
+		function mapObject(js, globe){
+			if(js.get('tree')){
+				const newGlobe = globe.mergeDeepIn(js.get('tree'), js);
+				return js.toSeq().reduce((combinedGlobes, newJS)=>{
+					return mapState(newJS, combinedGlobes);
+				}, newGlobe)
+			}else{
+				return js.toSeq().reduce((combinedGlobes, newJS)=>{
+					return mapState(newJS, combinedGlobes);
+				}, globe)
+			}
+		}
 
-		const instance = page.getIn(['globe', 'livestateGlobe', 'tests', '1']);
-		const newInstance = mutableMap(instance);
-		const nextInstance = newInstance
-		.changeFn('getX', 'get')
-		.changeFn('getInX', 'getIn');
-		
-		expect(nextInstance.getX('id')).to.equal(1);
-		const lastInstance = nextInstance.changeFn('getIn','',function(params){
-			return params.reduce((instance, param)=>{
-				return checkParam(instance, param);
-			}, this)
-		}).changeFn('get','',function(param){
-			return checkParam(this, param);
-		});
-		console.log('map', Map())
-		expect(lastInstance.get('id')).to.equal(1);
-		*/
+		function addToGlobe(js, tree, globe){
+			if(typeof js === 'object'){
+				return globe.mergeDeepIn(tree, transformToGlobe(js, tree));
+			}
+		}
+
+		function transformToGlobe(js, tree){
+			return Seq(js).mapEntries(([k, v]) => {
+				return [k, transformResponse(v, newTree.push(k))]
+			})
+		}
+
+		expect(addToGlobe(initialObject, ['tests', '1'], Map())).to.equal(globe);	
+
+		expect(initialObject).to.equal(globe);
 	});
 });
