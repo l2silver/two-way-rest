@@ -319,4 +319,146 @@ describe('core', ()=>{
 			})
 		);
 	});
+	it('new Map Functions', ()=>{		
+		function checkTWREntries(_globe, _firstInstance, _tree){
+			const _lastInstance = _tree.reduce((_previousInstance, _entry, _index, array)=>{
+				const _instanceTWR = _previousInstance.get(_entry+'TWR');
+				if(_instanceTWR){
+					if(List.isList(_instanceTWR)){
+						const orderedMap = _instanceTWR.reduce((orderedMap, id)=>{
+							const newOrderedMap = orderedMap.set(id.toString(), _globe.getIn([_entry.toString(), id.toString()]));
+							return newOrderedMap;
+						}, OrderedMap())
+						return orderedMap;
+					}
+					return _globe.getIn([_entry.toString(), _instanceTWR.toString()]);
+				}
+				return _previousInstance.get(_entry.toString());
+			}, _firstInstance)
+			if(Map.isMap(_lastInstance) || OrderedMap.isOrderedMap(_lastInstance)){
+				return _lastInstance.set('_globeTWR', _globe);	
+			}
+			return _lastInstance;
+		}
+
+		Map.prototype.gex = function(k, notSetValue) {
+	      const _root = this._root;
+	      const _globe = _root.get(0, undefined, '_globeTWR', notSetValue)
+	      const _tree = List(k);
+	      
+
+	      if(_globe){
+	      	return checkTWREntries(_globe, this, k);
+	      }
+	      throw 'globeTWR must be defined'
+	    };
+
+
+
+
+		const globe = Map({
+					tests: Map({
+						1: Map({
+							id: 1
+							, fake_testsTWR: List([1])
+						})
+					}),
+					fake_tests: Map({
+						1: Map({
+							id: 1
+							, fake_tests: List([1])
+						})
+					}),
+				});
+
+		console.log('globe', globe.getIn(['tests']))
+	    const instance = globe.getIn(['tests', '1']).set('_globeTWR', globe)
+	    
+	    expect(checkTWREntries(globe, instance, ['fake_tests', '1'])).to.equal(Map({
+							id: 1
+							, fake_tests: List([1])
+							, _globeTWR: globe
+						}));
+
+	    expect(instance.gex(['fake_tests', '1'])).to.equal(Map({
+							id: 1
+							, fake_tests: List([1])
+							, _globeTWR: globe
+						}));
+
+	    expect(Map({tiger: {cat: 'lilly'}}).getIn('x', 'cool')).to.equal('cool');
+	});
+
+	it.only('new globe functions', ()=>{
+		const globe = Map({
+					tests: Map({
+						1: Map({
+							id: 1
+							, fake_testsTWR: List([1])
+						})
+					}),
+					fake_tests: Map({
+						1: Map({
+							id: 1
+							, fake_tests: List([1])
+						})
+					}),
+				});
+
+
+		const initialObject = {
+				id: 1
+				, fake_tests: [
+					{id: 1}
+				]
+			};
+
+
+/*
+
+	How does one return a root?
+	Each returns the globe, merged with itself. 
+
+
+
+*/
+
+
+		function mapState(js, globe){
+			if(typeof js !== 'object' || js === null){
+				return globe;
+			}else{
+				return mapObject(js, globe);
+			}
+		}
+
+		function mapObject(js, globe){
+			if(js.get('tree')){
+				const newGlobe = globe.mergeDeepIn(js.get('tree'), js);
+				return js.toSeq().reduce((combinedGlobes, newJS)=>{
+					return mapState(newJS, combinedGlobes);
+				}, newGlobe)
+			}else{
+				return js.toSeq().reduce((combinedGlobes, newJS)=>{
+					return mapState(newJS, combinedGlobes);
+				}, globe)
+			}
+		}
+
+		function addToGlobe(js, tree, globe){
+			if(typeof js === 'object'){
+				return globe.mergeDeepIn(tree, transformToGlobe(js, tree));
+			}
+		}
+
+		function transformToGlobe(js, tree){
+			return Seq(js).mapEntries(([k, v]) => {
+				return [k, transformResponse(v, newTree.push(k))]
+			})
+		}
+
+		expect(addToGlobe(initialObject, ['tests', '1'], Map())).to.equal(globe);	
+
+		expect(initialObject).to.equal(globe);
+	});
 });
