@@ -15,8 +15,9 @@ import {
 	, transformResponse
 	
 } from './../lib/core';
-import {fromJS, Map, OrderedMap, List, Seq} from 'immutable';
-
+import {fromJS, Map, OrderedMap, List, Seq, is} from 'immutable';
+import inflect from 'i';
+inflect(true);
 
 describe('core', ()=>{
 	describe('transformResponse', ()=>{
@@ -389,7 +390,7 @@ describe('core', ()=>{
 	    expect(Map({tiger: {cat: 'lilly'}}).getIn('x', 'cool')).to.equal('cool');
 	});
 
-	it.only('new globe functions', ()=>{
+	
 		const globe = Map({
 					tests: Map({
 						1: Map({
@@ -414,51 +415,89 @@ describe('core', ()=>{
 			};
 
 
-/*
 
-	How does one return a root?
-	Each returns the globe, merged with itself. 
-
-
-
-*/
-
-
-		function mapState(js, globe){
-			if(typeof js !== 'object' || js === null){
-				return globe;
-			}else{
-				return mapObject(js, globe);
-			}
+		function orderedMap(children){
+			console.log('orderedMpa', children)
+			return children.reduce((orderedMap, child)=>{
+				return orderedMap.set(child.id.toString(), child);
+			}, OrderedMap())
 		}
 
-		function mapObject(js, globe){
-			if(js.get('tree')){
-				const newGlobe = globe.mergeDeepIn(js.get('tree'), js);
-				return js.toSeq().reduce((combinedGlobes, newJS)=>{
-					return mapState(newJS, combinedGlobes);
-				}, newGlobe)
-			}else{
-				return js.toSeq().reduce((combinedGlobes, newJS)=>{
-					return mapState(newJS, combinedGlobes);
-				}, globe)
-			}
+		function idArray(children){
+			console.log('array', children)
+			return children.reduce((list, child)=>{
+				return list.push(child.id.toString());
+			}, List())
 		}
 
-		function addToGlobe(js, tree, globe){
+		function createMapObject(k, js, tree){
+			console.log('do we arrive here?')
+			console.log('tree', tree)
 			if(typeof js === 'object'){
-				return globe.mergeDeepIn(tree, transformToGlobe(js, tree));
+				if(Array.isArray(js)){
+					if(js[0]){
+						if(js[0].id){
+							return Map({
+								  thisTree: tree.push(k)
+								, nextTree: List([k+'TWR'])
+								, nextObject: orderedMap(js)
+								, thisObject: idArray(js)
+							})
+						}
+					}
+				}
+				if(js.id){
+					return Map({
+						  thisTree: tree.push(k)
+						, nextTree: List([k.pluralize+'TWR'])
+						, nextObject: orderedMap(js)
+						, thisObject: js.id.toString()
+					})
+				}
 			}
+			return Map({
+						  thisTree: tree.push(k)
+						, thisObject: js
+						, nextTree: tree.push(k)
+						, nextObject: js
+					})
 		}
-
-		function transformToGlobe(js, tree){
+		function mapState(js, tree, globe){
+			if(typeof js !== 'object' || js === null){
+				return globe.setIn(tree, js);
+			}
 			return Seq(js).mapEntries(([k, v]) => {
-				return [k, transformResponse(v, newTree.push(k))]
-			})
+				return [k, 
+				createMapObject(k, v, tree)
+				]
+			}).reduce((globes, mapObject)=>{
+				const initialGlobe = globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
+				console.log('ig', initialGlobe);
+				return initialGlobe.mergeDeep(mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), globes));
+			}, globe);
 		}
 
-		expect(addToGlobe(initialObject, ['tests', '1'], Map())).to.equal(globe);	
 
-		expect(initialObject).to.equal(globe);
+	it('idArray', ()=>{	
+		expect(  is(idArray( [{id: 1}] ), List(['1']) )).to.be.truth
+	});
+
+	it('orderedMap', ()=>{	
+		expect(  is(orderedMap( [{id: 1}] ), OrderedMap([['1', {id: 1}]]) ) ).to.be.truth
+	});
+		
+	it('createMapObject', ()=>{
+		expect(  is(
+			createMapObject( 'fake_tests',  [{id: 1}], List(['tests', '1']))
+			,   Map({
+					thisTree: List(['tests', '1', 'fake_tests'])
+					, nextTree: List(['fake_testsTWR'])
+					, nextObject: OrderedMap([['1', {id: 1}]])
+					, thisObject: List(['1'])
+				})
+			)).to.be.truth
+	});
+	it.only('mapState', ()=>{
+		expect(mapState(initialObject, List(['tests', '1']), Map())).to.equal(globe);	
 	});
 });
