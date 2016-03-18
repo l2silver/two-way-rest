@@ -444,6 +444,17 @@ describe('core', ()=>{
 			if(typeof js !== 'object' || js === null){
 				return globe.setIn(tree, js);
 			}
+			if(Array.isArray(js)){
+				return Seq(js).toKeyedSeq().mapEntries(([k, v]) => {
+					return [k, 
+					createMapObject(k, v, tree)
+					]
+				}).reduce((globes, mapObject)=>{
+					const initialGlobe = globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
+					//console.log('ig', initialGlobe);
+					return initialGlobe.mergeDeep(mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), globes));
+				}, globe);
+			}
 			return Seq(js).toKeyedSeq().mapEntries(([k, v]) => {
 				return [k, 
 				createMapObject(k, v, tree)
