@@ -405,7 +405,6 @@ describe('core', ()=>{
 		}
 
 		function createMapObject(k, js, tree){
-			//console.log('js', js)
 			if(k == 'tree'){
 				return Map({
 								  tree: true
@@ -420,6 +419,7 @@ describe('core', ()=>{
 							return Map({
 								  thisTree: tree.push(k+'TWR')
 								, nextTree: List([k])
+								, deleteTree: tree.push(k)
 								, nextObject: orderedMap(js)
 								, thisObject: idArray(js)
 							})
@@ -431,6 +431,7 @@ describe('core', ()=>{
 						return Map({
 							  thisTree: tree.push(k)
 							, nextTree: List([k.pluralize+'TWR'])
+							, deleteTree: tree.push(k)
 							, nextObject: orderedMap([js])
 							, thisObject: js.id.toString()
 						})
@@ -452,7 +453,6 @@ describe('core', ()=>{
 				if(js[0] && js[0].id){
 					return addToGLobe(orderedMap(js), tree, globe);
 				}
-				
 			}
 			try{
 				if(Map.isMap(js)){
@@ -472,22 +472,23 @@ describe('core', ()=>{
 				createMapObject(k, v, tree)
 				]
 			}).reduce((globes, mapObject)=>{
-				console.log('tree', mapObject.get('thisTree'))
 				if(mapObject.get('tree')){
-					return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
+					if(mapObject.get('thisTree').size > 2){
+						return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));	
+					}
+					return globes
+					
 				}
 				const random = Math.floor((Math.random() * 100) + 1);
-				console.log(random, 'tree', mapObject.get('thisTree'))
 				const initialGlobe = globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
 				const nextGlobe = addTreeToObject(mapObject, initialGlobe);
-				console.log(random, 'nextGlobe', nextGlobe)
 				return nextGlobe.mergeDeep(mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), globes));
 			}
 			, globe);
 		}
 
 		function addTreeToObject(mapObject, globes){
-			if(typeof mapObject.get('thisObject') == 'object' && !Array.isArray(mapObject.get('thisObject')) && !List.isList(mapObject.get('thisObject'))  ){
+			if(typeof mapObject.get('thisObject') == 'object' && !Array.isArray(mapObject.get('thisObject')) && !List.isList(mapObject.get('thisObject')) && !OrderedMap.isOrderedMap(mapObject.get('thisObject'))  ){
 				if( Map.isMap(mapObject.get('thisObject')) ){
 					return globes.mergeIn(mapObject.get('thisTree'), {tree: mapObject.get('thisTree')});
 				}
@@ -498,11 +499,13 @@ describe('core', ()=>{
 
 
 	describe('mapState', ()=>{
-		it.only('simple map', ()=>{
+		it('simple map', ()=>{
 			const initialObject = Map({
 				id: 1
 				, fake_tests: [
-					{id: 1}
+					{
+						  id: 1
+					}
 				]
 			});
 			const globe = Map({
@@ -536,11 +539,14 @@ describe('core', ()=>{
 					1: Map({
 						id: 1
 						, fake_testsTWR: List(['1'])
+						, tree: List(['tests', '1'])
+
 					})
 				}),
 				fake_tests: Map({
 					1: Map({
 						id: 1
+						, tree: List(['fake_tests', '1'])
 					})
 				}),
 			});
@@ -548,34 +554,43 @@ describe('core', ()=>{
 			expect(mapState(initialObject, List(['tests', '1']), Map())).to.equal(globe);	
 		});
 
-		it('deep relations', ()=>{
-			const initialObject = {
-				id: 1
-				, fake_tests: [
+		it.only('deep relations', ()=>{
+			const faker_tests = [{id: 1}];
+			const fake_tests = [
 					{
 						id: 1
-						, faker_tests: [{id: 1}]
+						, faker_tests
 						, attributes: {eyes: 'blue'}
 					}
-				]
+				];
+			const initialObject = {
+				id: 1
+				, fake_tests
 			};
 			const globe = Map({
 				tests: Map({
 					1: Map({
 						id: 1
+						, fake_tests
 						, fake_testsTWR: List(['1'])
+						,  tree: List(['tests', '1'])
+
 					})
 				}),
 				fake_tests: Map({
 					1: Map({
 						id: 1
+						, faker_tests
 						, faker_testsTWR: List(['1'])
 						, attributes: Map({eyes: 'blue'})
+						,  tree: List(['fake_tests', '1'])
+
 					})
 				}),
 				faker_tests: Map({
 					1: Map({
 						id: 1
+						,  tree: List(['faker_tests', '1'])
 					})
 				}),
 			});
@@ -591,7 +606,7 @@ describe('core', ()=>{
 				tests: Map({
 						1: Map({
 							id: 1
-							
+						,  tree: List(['tests', '1'])							
 						})
 					})
 			});
@@ -600,20 +615,24 @@ describe('core', ()=>{
 			expect(mapState(initialObject, List(['tests']), Map())).to.equal(globe);	
 		});
 		it('array with relations', ()=>{
+			const fake_tests = [{id: 1}];
 			const initialObject = [{
 				id: 1,
-				fake_tests: [{id: 1}]
+				fake_tests
 			}];
 			const globe = Map({
 				tests: Map({
 						1: Map({
 							id: 1
+							, fake_tests
+							,  tree: List(['tests', '1'])
 							, fake_testsTWR: List(['1'])
 						})
 					}),
 				fake_tests: Map({
 						1: Map({
 							id: 1
+						,  tree: List(['fake_tests', '1'])							
 						})
 					})
 			});
