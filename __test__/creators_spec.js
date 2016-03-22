@@ -249,9 +249,9 @@ describe('creators', ()=>{
 				if(action.verb == 'INDEX'){
 					return true
 				}
-				expect(action.verb).to.equal('SET_INDEX');
+				expect(action.verb).to.equal('SET_GET');
 				expect(action.type).to.equal('test');
-				expect(action.tree).to.equal(args.get('tree'));
+				expect(action.tree).to.equal(List(['testsTWRIndex']));
 			}
 			coreGET(args, 'index')(dispatch, getState).then(()=>{
 				return done();
@@ -274,7 +274,7 @@ describe('creators', ()=>{
 			}
 			
 			function dispatch(action){
-				if(action.verb == 'SET_INDEX'){
+				if(action.verb == 'SET_GET'){
 					return action;	
 				}
 				expect(action.verb).to.equal('CREATE_ERROR');
@@ -302,7 +302,7 @@ describe('creators', ()=>{
 			}
 			
 			function dispatch(action){
-				if(action.verb == 'SET_INDEX'){
+				if(action.verb == 'SET_GET'){
 					return action;	
 				}
 				expect(action.verb).to.equal('INDEX');

@@ -156,7 +156,6 @@ export function responseCreator(response, args, successFn){
 	}	
 	if(args.get('outTrees')){
 		args.get('outTrees').map((outTree)=>{
-			console.log('TYPE', args.get('type'))
 			const nextArgs = successFn ? successFn(args) : args;
 			const nextAction = actions[nextArgs.get('type') + 'Action'](
 				nextArgs.get('reducer')
@@ -201,12 +200,7 @@ export function coreGET(args, type){
 				return true;	
 			}
 		}
-		dispatch(actions.setAction(
-			args.get('reducer')
-			, componentHelpers[type+'Check'](
-				args.get('tree')
-			)
-		));
+		dispatch(actions[type+'Set'+'Action'](args.get('reducer'), args.get('tree')));
 		return callforwardCreator(args.mergeDeep({dispatch, getState}))
 		.then((args)=>{
 			return get(args.get('path'))

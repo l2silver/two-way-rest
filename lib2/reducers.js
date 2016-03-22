@@ -1,7 +1,6 @@
 import {
 	index
 	, setIndex
-	, setGet
 	, show
 	, setShow
 	, create
@@ -30,8 +29,6 @@ export function generateRestSwitch(reducer){
 				switch(action.verb){
 					case 'INDEX':
 						return index(state, action.tree, action.response);
-					case 'SET_GET':
-						return setGet(state, action.tree);
 					case 'SET_INDEX':
 						return setIndex(state, action.tree);
 					case 'SHOW':

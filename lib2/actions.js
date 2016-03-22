@@ -104,14 +104,6 @@ export function indexSetAction(reducer, tree){
 	})
 }
 
-export function setAction(reducer, tree){
-	return({
-		type: reducer,
-		tree,
-		verb: 'SET_GET'
-	})
-}
-
 export function showSetAction(reducer, tree){
 	return({
 		type: reducer,

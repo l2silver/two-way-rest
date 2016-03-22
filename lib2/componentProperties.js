@@ -110,19 +110,9 @@ export const defaultProperties = Map({
 		}
 		return false;
 	},
-	globeType: function(){
-		return false
-	},
 	instance: function(){
 		if(this.page() && this.tree()){
-			if(this.globeType()){
-				const State = this.page().get(this.globeType());
-				if(State){
-					return State.getIn(this.tree()).set('_globeTWR', State);	
-				}
-				return Map();
-			}
-			return this.page().getIn(this.tree()).set('_globeTWR', this.page())
+			return this.page().getIn(this.tree());
 		}
 		return false;
   	},

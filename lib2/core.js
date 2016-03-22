@@ -215,11 +215,11 @@ export function checkTreeExists(state, trees, tree){
 }
 */
 
-export function setGet(state, tree){
-	const preSetLiveState = state.get('LiveState');
-	return state.set('LiveState',
-		mapState(true, tree, preSetLiveState)
-		);
+export function setIndex(state, tree){
+	const ListTree = List(tree);
+	const nextState = setMaps(state, ListTree)
+	.setIn(checkIndex(ListTree), true);
+	return nextState;
 }
 
 export function setShow(state, tree){
@@ -234,13 +234,15 @@ export function setShow(state, tree){
 }
 
 export function index(state, tree, response){
-	
-	return mapState(response, tree, state);
-	
+	const preIndexedLiveState = state.get('LiveState');
+	const LiveState = mapState(response, tree, preIndexedLiveState);
+	return state.set('LiveState', LiveState)
 }
 
 export function show(state, tree, response){
-	return mapState(response, tree, state);
+	const preIndexedLiveState = state.get('LiveState');
+	const LiveState = mapState(response, tree, preIndexedLiveState);
+	return state.set('LiveState', LiveState)
 }
 
 export function substateCreate(state, tree, content){
@@ -274,24 +276,27 @@ export function cleanSubstate(state, tree){
 }
 
 export function create(state, tree, content = Map(), response = {}, outTree){
+	const liveGlobe = state.get('LiveState');
 	const precleanedSubstate = state.get('Substate');
 	const Substate = cleanSubstate(precleanedSubstate, tree);
-	const liveGlobe = state.set('Substate', Substate);
-	return mapState(content.merge(response), outTree, liveGlobe)
+	const LiveState = mapState(content.merge(response), outTree, liveGlobe)
+	return state.merge({LiveState, Substate});
 }
 
 export function update(state, tree, content = Map(), response = {}, outTree){
+	const liveGlobe = state.get('LiveState');
 	const precleanedSubstate = state.get('Substate');
 	const Substate = cleanSubstate(precleanedSubstate, tree);
-	const liveGlobe = state.set('Substate', Substate);
-	return mapState(content.merge(response), outTree, liveGlobe)
+	const LiveState = mapState(content.merge(response), outTree, liveGlobe)
+	return state.merge({LiveState, Substate});
 }
 
 export function destroy(state, tree, outTree){
 	const preDeleteLiveState = state.get('LiveState');
 	const precleanedSubstate = state.get('Substate');
 	const Substate = cleanSubstate(precleanedSubstate, tree);
-	return state.deleteIn(outTree).set('Substate', Substate)
+	const LiveState = preDeleteLiveState.deleteIn(outTree)
+	return state.merge({LiveState, Substate})
 }
 
 export function createError(state, tree, content = Map(), response = {}){
