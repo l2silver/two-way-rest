@@ -372,7 +372,6 @@ describe('core', ()=>{
 					}),
 				});
 
-		console.log('globe', globe.getIn(['tests']))
 	    const instance = globe.getIn(['tests', '1']).set('_globeTWR', globe)
 	    
 	    expect(checkTWREntries(globe, instance, ['fake_tests', '1'])).to.equal(Map({
@@ -554,7 +553,7 @@ describe('core', ()=>{
 			expect(mapState(initialObject, List(['tests', '1']), Map())).to.equal(globe);	
 		});
 
-		it.only('deep relations', ()=>{
+		it('deep relations', ()=>{
 			const faker_tests = [{id: 1}];
 			const fake_tests = [
 					{
@@ -571,7 +570,6 @@ describe('core', ()=>{
 				tests: Map({
 					1: Map({
 						id: 1
-						, fake_tests
 						, fake_testsTWR: List(['1'])
 						,  tree: List(['tests', '1'])
 
@@ -581,8 +579,8 @@ describe('core', ()=>{
 					1: Map({
 						id: 1
 						, faker_tests
+						, attributes: Map({eyes: 'blue', tree: List(['fake_tests', '1', 'attributes'])})
 						, faker_testsTWR: List(['1'])
-						, attributes: Map({eyes: 'blue'})
 						,  tree: List(['fake_tests', '1'])
 
 					})
@@ -636,10 +634,19 @@ describe('core', ()=>{
 						})
 					})
 			});
-
-
-			expect(mapState(initialObject, List(['tests']), Map())).to.equal(globe);	
+			expect(mapState(initialObject, List(['tests']), Map())).to.equal(globe);
 		});
+		it.only('gex', ()=>{
+			const fake_tests = [{id: 1}];
+			const initialObject = [{
+				id: 1,
+				fake_tests
+			}];
+			const globe = mapState(initialObject, List(['tests']), Map());
+			const instance = globe.getIn(['tests', '1']).set('_globeTWR', globe)
+			expect(instance.gex(['fake_tests', '1'])).to.equal(globe.getIn(['fake_tests', '1']).set('_globeTWR', globe));
+		});
+
 	})
 	
 	it('idArray', ()=>{	
