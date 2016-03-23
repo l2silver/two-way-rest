@@ -172,13 +172,13 @@ export const StupidTWRShowFront = React.createClass(defaultProperties.merge(defa
 
 export const StupidTWRCreate = React.createClass(defaultProperties.merge(defaultPostCreateProperties).merge({
 	tree: function(){
-		return List(this.props.tree).push(this.getId())
+		return List(this.props.tree).unshift('Substate').push(this.getId())
 	}
 }).toJS());
 
 export const StupidTWRCreateFront = React.createClass(defaultProperties.merge(defaultPostCreateProperties).merge({
 	tree: function(){
-		return List(this.props.tree).push(this.getId())
+		return List(this.props.tree).unshift('Substate').push(this.getId())
 	},
 	submitForm: function(event){
 		event.preventDefault();
@@ -195,13 +195,8 @@ export const StupidTWRCreateFront = React.createClass(defaultProperties.merge(de
 }).toJS());
 
 export const StupidTWRCreateChild = React.createClass(defaultProperties.merge(defaultPostCreateProperties).merge({
-	parent: function(){
-		return List([
-			this.props.instance.first()
-			, this.props.instance.last()])
-	},
 	tree: function(){
-		return List([this.props.childName, this.getId()]);
+		return List(this.props.instance.get('tree')).unshift('Substate').push(this.props.childName).push(this.getId());
 	},
 	submitForm: function(event){
 		event.preventDefault();

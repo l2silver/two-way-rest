@@ -208,12 +208,12 @@ describe('core', ()=>{
 		describe('substate', ()=>{
 			it('success', ()=>{
 				const state = Map();
-				const nextState = substateCreate(state, List(['users', '12345']), {looks: 'good'});
+				const nextState = substateCreate(state, List(['users', '12345']), {id: 12345, looks: 'good'});
 				expect(nextState).to.equal(
 					Map({
 						Substate: Map({
 							users: Map({
-								'12345': Map({looks: 'good', tree: List(['users', '12345'])})
+								'12345': Map({id: 12345, looks: 'good', tree: List(['users', '12345'])})
 							})
 						})
 					})
@@ -264,6 +264,74 @@ describe('core', ()=>{
 								response
 							).merge({tree: tree.pop().push('2')})
 						}) 
+				})
+			);
+		});
+		it('success parent no relations', ()=>{
+
+			const tree = List(['users', '12345'])
+			const response = {looks: 'good', id: 2}
+			const content = Map({looks: 'good', id: '12345'})
+			const state = Map({
+				Substate: Map({
+					users: OrderedMap({
+						'12345': Map(content).merge({tree})
+					})
+				}),
+				parents: OrderedMap({
+					2: Map({id: 2, users: List([])})
+				})
+			})	
+			const nextState = create(state, tree, content, response, List(['users', '2']), List(['parents', '2']));
+			expect(nextState).to.equal(
+				Map({
+					Substate: Map({
+						users: OrderedMap({
+							12345: Map({looks: '', id: '12345'}).merge({tree})
+						})
+					}),
+					parents: OrderedMap({
+						2: Map({id: 2, users: List([]), usersTWR: List(["2"])})
+					}), 
+					users: Map({
+						2: Map(
+							response
+						).merge({tree: tree.pop().push('2')})
+					}) 
+				})
+			);
+		});
+		it('success parent relations exist', ()=>{
+
+			const tree = List(['users', '12345'])
+			const response = {looks: 'good', id: 2}
+			const content = Map({looks: 'good', id: '12345'})
+			const state = Map({
+				Substate: Map({
+					users: OrderedMap({
+						'12345': Map(content).merge({tree})
+					})
+				}),
+				parents: OrderedMap({
+					2: Map({id: 2, usersTWR: List(['1'])})
+				})
+			})	
+			const nextState = create(state, tree, content, response, List(['users', '2']), List(['parents', '2']));
+			expect(nextState).to.equal(
+				Map({
+					Substate: Map({
+						users: OrderedMap({
+							12345: Map({looks: '', id: '12345'}).merge({tree})
+						})
+					}),
+					parents: OrderedMap({
+						2: Map({id: 2, usersTWR: List(['1','2'])})
+					}), 
+					users: Map({
+						2: Map(
+							response
+						).merge({tree: tree.pop().push('2')})
+					}) 
 				})
 			);
 		});
@@ -330,7 +398,7 @@ describe('core', ()=>{
 				})
 			})
 		})
-		const nextState = destroy(state, ['users', '1'], ['users', '1']);
+		const nextState = destroy(state, List(['users', '1']), List(['users', '1']));
 		expect(nextState).to.equal(
 			Map({
 
@@ -486,7 +554,7 @@ describe('core', ()=>{
 					1: Map({
 						id: 1
 						, faker_tests
-						, attributes: Map({eyes: 'blue', tree: List(['fake_tests', '1', 'attributes'])})
+						, attributes: Map({eyes: 'blue'})
 						, faker_testsTWR: List(['1'])
 						,  tree: List(['fake_tests', '1'])
 

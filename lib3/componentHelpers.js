@@ -28,23 +28,9 @@ export function checkBranch(branch, changeLast){
 
 export function mapIf(immutableObject, fn, False){
 	if(immutableObject){
-		if(immutableObject.get){
-			const _globeTWR = immutableObject.get('_globeTWR');
-			if(!_globeTWR){
-				throw '_globeTWR not defined'
-			}
-			return immutableObject.toSeq().filterNot((v, k) => k == '_globeTWR').map(v=>{
-				if(v.get && v.get('id')){
-					return v.set('_globeTWR', _globeTWR)
-				}
-				return v
-			}).map(fn);
-		}
-		if(Array.isArray(immutableObject) && immutableObject.length > 0){
-			return immutableObject.map(fn);
-		}
+		return immutableObject.toSeq().map(fn);
 	}
-	return False	
+	return False
 }
 
 export function getTree(start, popNot){

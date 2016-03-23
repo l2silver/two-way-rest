@@ -64,8 +64,7 @@ export function createArgs(twr, form){
 			onFailureCB: twr.props.onFailureCB,
 			upload: twr.props.upload,
 			force: twr.props.force,
-			outTrees: twr.props.outTrees,
-			parent: twr.parent()
+			outTrees: twr.props.outTrees
 		})
 }
 
@@ -73,9 +72,6 @@ export function createArgs(twr, form){
 export const defaultProperties = Map({
 	contextTypes: {
 	   reducer: React.PropTypes.string.isRequired
-	},
-	parent: function(){
-		return false;
 	},
 	unmount: function(){
 		return true
@@ -122,24 +118,11 @@ export const defaultProperties = Map({
 			if(this.globeType()){
 				const State = this.page().get(this.globeType());
 				if(State){
-					const instanceExists = State.getIn(this.tree())
-					if(instanceExists){
-						return instanceExists.set('_globeTWR', State);		
-					}
+					return State.getIn(this.tree()).set('_globeTWR', State);	
 				}
 				return Map();
 			}
-			const instance = this.page().getIn(this.tree());
-			if(instance){
-				if(instance.set){
-					if(is(Map({TWRShow: true}), instance.delete('_globeTWR'))) {
-						return false
-					}
-					return instance.set('_globeTWR', this.page())		
-				}
-				return instance;
-			}
-			
+			return this.page().getIn(this.tree()).set('_globeTWR', this.page())
 		}
 		return false;
   	},
@@ -164,6 +147,7 @@ export const defaultProperties = Map({
   		return this.tree();
   	},
   	path: function(){
+  		console.log('should be here', this.props.path)
   		if(this.props.path){
   			return this.props.path
   		}
@@ -250,7 +234,6 @@ export const defaultCreateSubstate = {
 		return this.substateId;
 	},
 	mount: function(){
-
     	this.props.substateCreate(
     		createArgs(
     			this
@@ -283,9 +266,6 @@ export const defaultCreateSubstate = {
 }
 
 export const defaultPostProperties = Map({
-	globeType: function(){
-		return 'Substate'
-	},
 	getId: function(){
 		if(this.substateId){
 			return substateId;
@@ -311,7 +291,7 @@ export const defaultPostProperties = Map({
 		if(this.props.path){
 			return this.props.path;
 		}
-		return urlPath(this.tree().pop());
+		return urlPath(this.tree().shift().pop());
 	}
 });
 
@@ -323,6 +303,7 @@ export const defaultPostCreateProperties = Map(defaultPostProperties)
 		if(this.props.outTree){
   			return List(this.props.outTree)
   		}
+  		console.log('outTree', this.tree().shift().pop().toJS());
   		return this.tree().shift().pop();
 	}
 });

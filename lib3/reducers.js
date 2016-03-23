@@ -39,7 +39,7 @@ export function generateRestSwitch(reducer){
 					case 'SET_SHOW':
 						return setShow(state, action.tree, action.response);
 					case 'CREATE':
-						return create(state, action.tree, action.content, action.response, action.outTree, action.parent);
+						return create(state, action.tree, action.content, action.response, action.outTree);
 					case 'SUBSTATE_CREATE':
 						return substateCreate(state, action.tree, action.content);
 					case 'SUBSTATE_DELETE':

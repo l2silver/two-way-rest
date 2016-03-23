@@ -150,60 +150,46 @@ export function postRequestCreator(args, fn){
 }
 
 export function responseCreator(response, args, successFn){
-	
-	try{
-		console.log('response', response);
-
-		if(response.hasOwnProperty('errors')){
-			throw args.set('response', response)
-		}
-		if(args.get('outTrees')){
-			args.get('outTrees').map((outTree)=>{
-				const nextArgs = successFn ? successFn(args) : args;
-				const nextAction = actions[nextArgs.get('type') + 'Action'](
-					nextArgs.get('reducer')
-					, nextArgs.get('tree')
-					, nextArgs.get('combinedContent').mergeDeep(nextArgs.get('onSuccess'))
-					, response
-					, outTree
-					, nextArgs.get('parent')
-					)
-				return args.get('dispatch')(
-					nextAction
-					);
-			});
-			return onSuccessCBCreator(nextArgs.set('response', response));
-		}else{
+	console.log('response', response);
+	if(response.hasOwnProperty('errors')){
+		throw args.set('response', response)
+	}	
+	if(args.get('outTrees')){
+		args.get('outTrees').map((outTree)=>{
+			console.log('TYPE', args.get('type'))
 			const nextArgs = successFn ? successFn(args) : args;
-
 			const nextAction = actions[nextArgs.get('type') + 'Action'](
 				nextArgs.get('reducer')
 				, nextArgs.get('tree')
 				, nextArgs.get('combinedContent').mergeDeep(nextArgs.get('onSuccess'))
 				, response
-				, nextArgs.get('outTree')
-				, nextArgs.get('parent')
+				, outTree
 				)
-			nextArgs.get('dispatch')(
+			return args.get('dispatch')(
 				nextAction
 				);
-			
-			return onSuccessCBCreator(nextArgs.set('response', response));
+		});
+		return onSuccessCBCreator(nextArgs.set('response', response));
+	}else{
+		const nextArgs = successFn ? successFn(args) : args;
+		const nextAction = actions[nextArgs.get('type') + 'Action'](
+			nextArgs.get('reducer')
+			, nextArgs.get('tree')
+			, nextArgs.get('combinedContent').mergeDeep(nextArgs.get('onSuccess'))
+			, response
+			, nextArgs.get('outTree')
+			)
+		args.get('dispatch')(
+			nextAction
+			);
+		return onSuccessCBCreator(nextArgs.set('response', response));
 
-		}
-
-	}catch(e){
-		console.log('ERROR INFORMATION', e)
-		console.log('ERROR LINE NUMBER', e.lineNumber)
-		throw e
 	}
-	
 }
 
 
 export function coreGET(args, type){
 	return (dispatch, getState)=>{
-		console.log('coreGET', args.toJS())
 		if(getState()[args.get('reducer')]
 			.getIn(
 				componentHelpers[type+'Check'](
@@ -253,18 +239,9 @@ export function substateDelete(args){
 
 export function substateCreate(args){
 	return (dispatch, getState)=>{
-
-		const content = getContent(
-			args.get('form')
-		).merge(args.get('content'));
-		return dispatch(
-			actions.substateCreateAction(
-				args.get('reducer')
-				, args.get('tree')
-				, content.toJS()
-			)
-		)
-	}	
+		const content = getContent(args.get('form'));
+		return dispatch(actions.substateCreateAction(args.get('reducer'), args.get('tree'), content.toJS()))
+	}
 }
 
 export function create(args){

@@ -13,7 +13,7 @@ export function checkTWREntries(_globe, _firstInstance, _tree){
 				}, OrderedMap())
 				return orderedMap;
 			}
-			return _globe.getIn([_entry.pluralize.toString(), _instanceTWR.toString()]);
+			return _globe.getIn([_entry.toString(), _instanceTWR.toString()]);
 		}
 		return _previousInstance.get(_entry.toString());
 	}, _firstInstance)
@@ -72,8 +72,8 @@ export function createMapObject(k, js, tree){
 		if(js.id){
 			if(k != js.id){
 				return Map({
-					  thisTree: tree.push(k + 'TWR')
-					, nextTree: List([k.pluralize])
+					  thisTree: tree.push(k)
+					, nextTree: List([k.pluralize+'TWR'])
 					, deleteTree: tree.push(k)
 					, nextObject: orderedMap([js])
 					, thisObject: js.id.toString()
@@ -117,11 +117,7 @@ export function addToGLobe(js, tree, globe){
 	}).reduce((globes, mapObject)=>{
 		if(mapObject.get('tree')){
 			if(mapObject.get('thisTree').size > 2){
-				const objectToAddTree = globes.getIn(mapObject.get('thisTree').pop())
-				if(objectToAddTree && objectToAddTree.get('id')){
-					return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));		
-				}
-				
+				return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));	
 			}
 			return globes
 			
@@ -136,18 +132,10 @@ export function addToGLobe(js, tree, globe){
 
 export function addTreeToObject(mapObject, globes){
 	if(typeof mapObject.get('thisObject') == 'object' && !Array.isArray(mapObject.get('thisObject')) && !List.isList(mapObject.get('thisObject')) && !OrderedMap.isOrderedMap(mapObject.get('thisObject'))  ){
-
 		if( Map.isMap(mapObject.get('thisObject')) ){
-			if(mapObject.get('thisObject').get('id')){
-				return globes.mergeIn(mapObject.get('thisTree'), {tree: mapObject.get('thisTree')});	
-			}
-		}else{
-			if(mapObject.get('thisObject').id){
-				return globes.setIn(mapObject.get('thisTree'), Map(mapObject.get('thisObject')).merge({tree: mapObject.get('thisTree')}));	
-			}
-			
+			return globes.mergeIn(mapObject.get('thisTree'), {tree: mapObject.get('thisTree')});
 		}
-		
+		return globes.setIn(mapObject.get('thisTree'), Map(mapObject.get('thisObject')).merge({tree: mapObject.get('thisTree')}));
 	}
 	return globes
 }
@@ -228,7 +216,10 @@ export function checkTreeExists(state, trees, tree){
 */
 
 export function setGet(state, tree){
-	return mapState(true, tree, state)
+	const preSetLiveState = state.get('LiveState');
+	return state.set('LiveState',
+		mapState(true, tree, preSetLiveState)
+		);
 }
 
 export function setShow(state, tree){
@@ -243,6 +234,7 @@ export function setShow(state, tree){
 }
 
 export function index(state, tree, response){
+	
 	return mapState(response, tree, state);
 	
 }
@@ -251,11 +243,11 @@ export function show(state, tree, response){
 	return mapState(response, tree, state);
 }
 
-export function substateCreate(state, tree, content = Map()){
+export function substateCreate(state, tree, content){
 	return state.set(
 		'Substate'
 		, mapState(
-			Map(content)
+			content
 			, tree
 			, state.get('Substate')
 		)
@@ -268,6 +260,8 @@ export function substateDelete(state, tree, content){
 }
 
 export function cleanSubstate(state, tree){
+	//console.log('state', state)
+	//console.log('tree', tree)
 	const cloneElement = state.getIn(tree);
 	const cleanCloneElement = cloneElement.toSeq().mapEntries(([k,v])=>{
 		if(k == 'tree' || k == 'id'){
@@ -279,22 +273,11 @@ export function cleanSubstate(state, tree){
 	return state.setIn(tree, cleanCloneElement);
 }
 
-export function create(state, tree, content = Map(), response = {}, outTree, parent){
+export function create(state, tree, content = Map(), response = {}, outTree){
 	const precleanedSubstate = state.get('Substate');
 	const Substate = cleanSubstate(precleanedSubstate, tree);
 	const liveGlobe = state.set('Substate', Substate);
-	const nextState = mapState(content.merge(response), outTree, liveGlobe)
-	if(parent){
-		const childName = tree.first() + 'TWR';
-		const childId = outTree.last().toString()
-		const parentRelations = nextState.getIn(parent).get(childName);
-		if(parentRelations){
-			return nextState.updateIn(parent.push(childName), children => children.push(childId))	
-		}
-		return nextState.setIn(parent.push(childName), List([childId]))
-
-	}
-	return nextState;
+	return mapState(content.merge(response), outTree, liveGlobe)
 }
 
 export function update(state, tree, content = Map(), response = {}, outTree){
@@ -305,6 +288,7 @@ export function update(state, tree, content = Map(), response = {}, outTree){
 }
 
 export function destroy(state, tree, outTree){
+	const preDeleteLiveState = state.get('LiveState');
 	const precleanedSubstate = state.get('Substate');
 	const Substate = cleanSubstate(precleanedSubstate, tree);
 	return state.deleteIn(outTree).set('Substate', Substate)

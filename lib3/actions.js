@@ -27,15 +27,14 @@ export function indexErrorAction(reducer, tree, content, response){
 	})
 }
 
-export function createAction(reducer, tree, content, response, outTree, parent = false){
+export function createAction(reducer, tree, content, response, outTree){
 	return({
 		type: reducer,
 		tree,
 		content,
 		response,
 		verb: 'CREATE',
-		outTree,
-		parent
+		outTree
 	})
 }
 export function createErrorAction(reducer, tree, content, response){
