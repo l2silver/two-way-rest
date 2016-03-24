@@ -26,13 +26,16 @@ describe('mirrorRestReducers', ()=>{
 
 		}
 		expect(restSwitch(state, action)).to.equal(
-			Map({users: 
-				OrderedMap({
-					1: Map({
-						name: 'example'
-						, id: 1
-					}).merge({tree})
-				})
+			Map({
+				
+					users: 
+						Map({
+						1: Map({
+							name: 'example'
+							, id: 1
+						}).merge({tree})
+					})
+				
 			})
 		);
 	});

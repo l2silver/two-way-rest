@@ -13,13 +13,62 @@ import {
 	, convertArrayToOrderedMap
 	, fromJSOrdered
 	, transformResponse
+	, mapState
+	, checkTWREntries
+	, idArray
+	, orderedMap
+	, createMapObject
 	
 } from './../lib/core';
+
+
+/*
+
+
+The NEXT PHASE: CELA
+
+I need to figure out how the substate will work. What might make the most sense at this point is a another variable called 
+
+globeType, live, substate
+
+If we include the globeType, everything becomes simpler.
+
+Base Set, Delete, Merge based off of tree.
+
+How do we put things into the globe. We mapState the objects into the globe.
+
+How can I get started? Piece by piece, I'll have to change everything.
+
+But, what could be nice is a simpler structure.
+
+Base create, update are almost identical, except for the rest action, and their ids.
+
+Base delete is different.
+
+Show and index are the same, and should be relegated to one line? It is one action.
+
+Create, Update, Delete, Get
+
+FrontCreate ...
+
+
+
+
+
+
+
+
+
+
+*/
+
 import {fromJS, Map, OrderedMap, List, Seq, is} from 'immutable';
 import inflect from 'i';
 inflect(true);
 
 describe('core', ()=>{
+	
+/*
 	describe('transformResponse', ()=>{
 		it('two degrees', ()=>{
 			const tree = List(['orange']);
@@ -104,8 +153,8 @@ describe('core', ()=>{
 			);
 		});
 	});
-	
-
+	*/
+/*
 	const state = Map({
 		users: OrderedMap()
 		, Substate: Map()
@@ -154,22 +203,17 @@ describe('core', ()=>{
 			})
 		);
 	});
+	*/
 	describe('create', ()=>{
 		describe('substate', ()=>{
 			it('success', ()=>{
-				const state = Map({
-
-				});
-	
-				const nextState = substateCreate(state, ['Substate','users', '12345'], {looks: 'good'});
+				const state = Map();
+				const nextState = substateCreate(state, List(['users', '12345']), {id: 12345, looks: 'good'});
 				expect(nextState).to.equal(
 					Map({
-							Substate: OrderedMap({
-								users: OrderedMap({
-								12345: Map({
-											  looks: 'good'
-											, tree: List(['Substate','users', '12345'])
-								})
+						Substate: Map({
+							users: Map({
+								'12345': Map({id: 12345, looks: 'good', tree: List(['users', '12345'])})
 							})
 						})
 					})
@@ -177,29 +221,25 @@ describe('core', ()=>{
 			});
 		});
 		it('cleanSubstate', ()=>{
-			const tree = List(['Substate','users', '12345']);
+			const tree = List(['users', '12345']);
 			const content = {id: '12345', content: 'content', tree}
 			const state = Map({
-				Substate: OrderedMap({
-					users: OrderedMap({
-						12345: Map(content)
-					})
+				users: OrderedMap({
+					12345: Map(content)
 				})
 			})
 			const nextState = cleanSubstate(state, tree)
 			expect(nextState).to.equal(
 				Map({
-					Substate: OrderedMap({
-						users: OrderedMap({
-							12345: Map({id: '12345', content: '', tree})
-						})
+					users: OrderedMap({
+						12345: Map({id: '12345', content: '', tree})
 					})
 				})
 			)
 		})
 		it('success', ()=>{
 
-			const tree = List(['Substate', 'users', '12345'])
+			const tree = List(['users', '12345'])
 			const response = {looks: 'good', id: 2}
 			const content = Map({looks: 'good', id: '12345'})
 			const state = Map({
@@ -210,6 +250,7 @@ describe('core', ()=>{
 				})
 			})	
 			const nextState = create(state, tree, content, response, List(['users', '2']));
+			console.log("What up")
 			expect(nextState).to.equal(
 				Map({
 					Substate: Map({
@@ -217,16 +258,85 @@ describe('core', ()=>{
 							12345: Map({looks: '', id: '12345'}).merge({tree})
 						})
 					}),
+					
+						users: Map({
+							2: Map(
+								response
+							).merge({tree: tree.pop().push('2')})
+						}) 
+				})
+			);
+		});
+		it('success parent no relations', ()=>{
+
+			const tree = List(['users', '12345'])
+			const response = {looks: 'good', id: 2}
+			const content = Map({looks: 'good', id: '12345'})
+			const state = Map({
+				Substate: Map({
 					users: OrderedMap({
+						'12345': Map(content).merge({tree})
+					})
+				}),
+				parents: OrderedMap({
+					2: Map({id: 2, users: List([])})
+				})
+			})	
+			const nextState = create(state, tree, content, response, List(['users', '2']), List(['parents', '2']));
+			expect(nextState).to.equal(
+				Map({
+					Substate: Map({
+						users: OrderedMap({
+							12345: Map({looks: '', id: '12345'}).merge({tree})
+						})
+					}),
+					parents: OrderedMap({
+						2: Map({id: 2, users: List([]), usersTWR: List(["2"])})
+					}), 
+					users: Map({
 						2: Map(
 							response
-						).merge({tree: tree.shift().pop().push('2')})
+						).merge({tree: tree.pop().push('2')})
+					}) 
+				})
+			);
+		});
+		it('success parent relations exist', ()=>{
+
+			const tree = List(['users', '12345'])
+			const response = {looks: 'good', id: 2}
+			const content = Map({looks: 'good', id: '12345'})
+			const state = Map({
+				Substate: Map({
+					users: OrderedMap({
+						'12345': Map(content).merge({tree})
+					})
+				}),
+				parents: OrderedMap({
+					2: Map({id: 2, usersTWR: List(['1'])})
+				})
+			})	
+			const nextState = create(state, tree, content, response, List(['users', '2']), List(['parents', '2']));
+			expect(nextState).to.equal(
+				Map({
+					Substate: Map({
+						users: OrderedMap({
+							12345: Map({looks: '', id: '12345'}).merge({tree})
+						})
+					}),
+					parents: OrderedMap({
+						2: Map({id: 2, usersTWR: List(['1','2'])})
+					}), 
+					users: Map({
+						2: Map(
+							response
+						).merge({tree: tree.pop().push('2')})
 					}) 
 				})
 			);
 		});
 		it('createError', ()=>{		
-			const tree = List(['Substate','users', '1']);
+			const tree = List(['users', '1']);
 			const response = {errors: 'error'};
 			const content = Map({id: 1});
 			const state = Map({
@@ -251,20 +361,25 @@ describe('core', ()=>{
 	
 	it('update', ()=>{
 		const state = Map({
-			users: OrderedMap()
+			
+				users: OrderedMap()
+			
 			, Substate: Map({
 				users: OrderedMap({
 					1: Map({id: 1, looks: 'not great'})
 				})
 			})
 		})
+		const tree = List(['users', '1'])
 
-		const nextState = update(state, List(['Substate','users', '1']), Map({looks: 'alright', id: 1}), {}, List(['users', '1']));
+		const nextState = update(state, tree, Map({looks: 'alright', id: 1}), {}, List(['users', '1']));
 		expect(nextState).to.equal(
 			Map({
-				users: OrderedMap({
-					'1': Map({looks: 'alright', id: 1})
-				})
+				
+					users: OrderedMap({
+						'1': Map({looks: 'alright', id: 1, tree})
+					})
+				
 				, Substate: Map({
 					users: OrderedMap({
 						1: Map({id: 1, looks: ''})
@@ -275,17 +390,20 @@ describe('core', ()=>{
 	});
 	it('destroy', ()=>{
 		const state = Map({
-			users: OrderedMap()
+				users: OrderedMap()
+
 			, Substate: Map({
 				users: OrderedMap({
 					1: Map({id: 1, looks: 'not great'})
 				})
 			})
 		})
-		const nextState = destroy(state, ['Substate','users', '1'], ['users', '1']);
+		const nextState = destroy(state, List(['users', '1']), List(['users', '1']));
 		expect(nextState).to.equal(
 			Map({
-				users: OrderedMap({})
+
+					users: OrderedMap({})
+
 				, Substate: Map({
 					users: OrderedMap({
 						1: Map({id: 1, looks: ''})
@@ -301,9 +419,10 @@ describe('core', ()=>{
 		const nextState = index(state, tree, response);
 		expect(nextState).to.equal(
 			Map({
-				users: OrderedMap({
-					1: Map({id: 1, tree: tree.push('1')})
-				})
+					users: Map({
+						1: Map({id: 1, tree: tree.push('1')})
+					})
+
 			})
 		);
 	});
@@ -314,49 +433,13 @@ describe('core', ()=>{
 		const nextState = show(state, tree, response);
 		expect(nextState).to.equal(
 			Map({
-				users: OrderedMap({
-					1: Map({id: 1, tree})
-				})
+					users: Map({
+						1: Map({id: 1, tree})
+					})
 			})
 		);
 	});
 	it('new Map Functions', ()=>{		
-		function checkTWREntries(_globe, _firstInstance, _tree){
-			const _lastInstance = _tree.reduce((_previousInstance, _entry, _index, array)=>{
-				const _instanceTWR = _previousInstance.get(_entry+'TWR');
-				if(_instanceTWR){
-					if(List.isList(_instanceTWR)){
-						const orderedMap = _instanceTWR.reduce((orderedMap, id)=>{
-							const newOrderedMap = orderedMap.set(id.toString(), _globe.getIn([_entry.toString(), id.toString()]));
-							return newOrderedMap;
-						}, OrderedMap())
-						return orderedMap;
-					}
-					return _globe.getIn([_entry.toString(), _instanceTWR.toString()]);
-				}
-				return _previousInstance.get(_entry.toString());
-			}, _firstInstance)
-			if(Map.isMap(_lastInstance) || OrderedMap.isOrderedMap(_lastInstance)){
-				return _lastInstance.set('_globeTWR', _globe);	
-			}
-			return _lastInstance;
-		}
-
-		Map.prototype.gex = function(k, notSetValue) {
-	      const _root = this._root;
-	      const _globe = _root.get(0, undefined, '_globeTWR', notSetValue)
-	      const _tree = List(k);
-	      
-
-	      if(_globe){
-	      	return checkTWREntries(_globe, this, k);
-	      }
-	      throw 'globeTWR must be defined'
-	    };
-
-
-
-
 		const globe = Map({
 					tests: Map({
 						1: Map({
@@ -388,114 +471,6 @@ describe('core', ()=>{
 
 	    expect(Map({tiger: {cat: 'lilly'}}).getIn('x', 'cool')).to.equal('cool');
 	});
-
-	
-		
-		function orderedMap(children){
-			return children.reduce((orderedMap, child)=>{
-				return orderedMap.set(child.id.toString(), child);
-			}, OrderedMap())
-		}
-
-		function idArray(children){
-			return children.reduce((list, child)=>{
-				return list.push(child.id.toString());
-			}, List())
-		}
-
-		function createMapObject(k, js, tree){
-			if(k == 'tree'){
-				return Map({
-								  tree: true
-								, thisTree: tree.push(k)
-								, thisObject: js
-							})
-			}
-			if(typeof js === 'object'){
-				if(Array.isArray(js)){
-					if(js[0]){
-						if(js[0].id){
-							return Map({
-								  thisTree: tree.push(k+'TWR')
-								, nextTree: List([k])
-								, deleteTree: tree.push(k)
-								, nextObject: orderedMap(js)
-								, thisObject: idArray(js)
-							})
-						}
-					}
-				}
-				if(js.id){
-					if(k != js.id){
-						return Map({
-							  thisTree: tree.push(k)
-							, nextTree: List([k.pluralize+'TWR'])
-							, deleteTree: tree.push(k)
-							, nextObject: orderedMap([js])
-							, thisObject: js.id.toString()
-						})
-					}
-				}
-			}
-			return Map({
-						  thisTree: tree.push(k)
-						, thisObject: js
-						, nextTree: tree.push(k)
-						, nextObject: js
-					})
-		}
-		function mapState(js, tree, globe){
-			if(typeof js !== 'object' || js === null){
-				return globe.setIn(tree, js);
-			}
-			if(Array.isArray(js)){
-				if(js[0] && js[0].id){
-					return addToGLobe(orderedMap(js), tree, globe);
-				}
-			}
-			try{
-				if(Map.isMap(js)){
-					return addToGLobe(js.merge({tree}), tree, globe);
-				}
-				return addToGLobe(Map(js).merge({tree}), tree, globe);	
-			}catch(e){
-				console.log('in error', js, tree)
-				throw e
-			}
-			
-		}
-
-		function addToGLobe(js, tree, globe){
-			return Seq(js).toKeyedSeq().mapEntries(([k, v]) => {
-				return [k, 
-				createMapObject(k, v, tree)
-				]
-			}).reduce((globes, mapObject)=>{
-				if(mapObject.get('tree')){
-					if(mapObject.get('thisTree').size > 2){
-						return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));	
-					}
-					return globes
-					
-				}
-				const random = Math.floor((Math.random() * 100) + 1);
-				const initialGlobe = globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
-				const nextGlobe = addTreeToObject(mapObject, initialGlobe);
-				return nextGlobe.mergeDeep(mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), globes));
-			}
-			, globe);
-		}
-
-		function addTreeToObject(mapObject, globes){
-			if(typeof mapObject.get('thisObject') == 'object' && !Array.isArray(mapObject.get('thisObject')) && !List.isList(mapObject.get('thisObject')) && !OrderedMap.isOrderedMap(mapObject.get('thisObject'))  ){
-				if( Map.isMap(mapObject.get('thisObject')) ){
-					return globes.mergeIn(mapObject.get('thisTree'), {tree: mapObject.get('thisTree')});
-				}
-				return globes.setIn(mapObject.get('thisTree'), Map(mapObject.get('thisObject')).merge({tree: mapObject.get('thisTree')}));
-			}
-			return globes
-		}
-
 
 	describe('mapState', ()=>{
 		it('simple map', ()=>{
@@ -579,7 +554,7 @@ describe('core', ()=>{
 					1: Map({
 						id: 1
 						, faker_tests
-						, attributes: Map({eyes: 'blue', tree: List(['fake_tests', '1', 'attributes'])})
+						, attributes: Map({eyes: 'blue'})
 						, faker_testsTWR: List(['1'])
 						,  tree: List(['fake_tests', '1'])
 
@@ -636,7 +611,7 @@ describe('core', ()=>{
 			});
 			expect(mapState(initialObject, List(['tests']), Map())).to.equal(globe);
 		});
-		it.only('gex', ()=>{
+		it('gex', ()=>{
 			const fake_tests = [{id: 1}];
 			const initialObject = [{
 				id: 1,

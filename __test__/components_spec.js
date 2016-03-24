@@ -71,7 +71,7 @@ describe('components', ()=>{
 		      	}, { reducer: "test" });
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
-		  		expect(ins.instance()).to.equal(state.test.get('tests'));
+		  		expect(ins.instance().delete('_globeTWR')).to.equal(state.test.get('tests'));
 			});
 			describe('get', ()=>{
 				function index(args){

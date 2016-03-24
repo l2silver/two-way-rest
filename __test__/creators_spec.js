@@ -199,6 +199,29 @@ describe('creators', ()=>{
 			}
 			create(args)(dispatch);
 		});
+		it.only('success parent', (done)=>{
+			const content = Map({test: 'testValue'});
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path,
+				outTree: tree,
+				parent: tree.shift().unshift('parents')
+			})
+			function dispatch(action){
+				expect(action.verb).to.equal('CREATE');
+				expect(action.type).to.equal('test');
+				expect(action.content.get('test')).to.equal('testValue');
+				expect(action.response.id).to.equal(responseObject.id);
+				expect(action.tree).to.equal(args.get('tree'));
+				expect(action.parent).to.equal(args.get('tree').shift().unshift('parents'));
+				return done();
+			}
+			create(args)(dispatch);
+		});
 		
 		it('dispatches createError', (done)=>{
 			const content = Map({test: 'testValue'});
@@ -208,7 +231,8 @@ describe('creators', ()=>{
 				tree,
 				reducer,
 				content,
-				path
+				path,
+				outTree: tree
 			})
 			function dispatch(action){
 				expect(action.verb).to.equal('CREATE_ERROR');
@@ -249,9 +273,9 @@ describe('creators', ()=>{
 				if(action.verb == 'INDEX'){
 					return true
 				}
-				expect(action.verb).to.equal('SET_INDEX');
+				expect(action.verb).to.equal('SET_GET');
 				expect(action.type).to.equal('test');
-				expect(action.tree).to.equal(args.get('tree'));
+				expect(action.tree).to.equal(List(['testsTWRIndex']));
 			}
 			coreGET(args, 'index')(dispatch, getState).then(()=>{
 				return done();
@@ -274,7 +298,7 @@ describe('creators', ()=>{
 			}
 			
 			function dispatch(action){
-				if(action.verb == 'SET_INDEX'){
+				if(action.verb == 'SET_GET'){
 					return action;	
 				}
 				expect(action.verb).to.equal('CREATE_ERROR');
@@ -302,7 +326,7 @@ describe('creators', ()=>{
 			}
 			
 			function dispatch(action){
-				if(action.verb == 'SET_INDEX'){
+				if(action.verb == 'SET_GET'){
 					return action;	
 				}
 				expect(action.verb).to.equal('INDEX');
