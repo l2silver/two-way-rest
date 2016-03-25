@@ -23,6 +23,8 @@ function generateRestSwitch(reducer) {
 				switch (action.verb) {
 					case 'INDEX':
 						return (0, _core.index)(state, action.tree, action.response);
+					case 'SET_GET':
+						return (0, _core.setGet)(state, action.tree);
 					case 'SET_INDEX':
 						return (0, _core.setIndex)(state, action.tree);
 					case 'SHOW':
@@ -30,7 +32,7 @@ function generateRestSwitch(reducer) {
 					case 'SET_SHOW':
 						return (0, _core.setShow)(state, action.tree, action.response);
 					case 'CREATE':
-						return (0, _core.create)(state, action.tree, action.content, action.response, action.outTree);
+						return (0, _core.create)(state, action.tree, action.content, action.response, action.outTree, action.parent);
 					case 'SUBSTATE_CREATE':
 						return (0, _core.substateCreate)(state, action.tree, action.content);
 					case 'SUBSTATE_DELETE':

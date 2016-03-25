@@ -199,7 +199,7 @@ describe('creators', ()=>{
 			}
 			create(args)(dispatch);
 		});
-		it.only('success parent', (done)=>{
+		it('success parent', (done)=>{
 			const content = Map({test: 'testValue'});
 			const path = '/tests'
 			const args = Map({

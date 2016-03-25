@@ -14,6 +14,7 @@ exports.substateDeleteAction = substateDeleteAction;
 exports.substateCreateAction = substateCreateAction;
 exports.destroyAction = destroyAction;
 exports.indexSetAction = indexSetAction;
+exports.setAction = setAction;
 exports.showSetAction = showSetAction;
 function showAction(reducer, tree, response) {
 	return {
@@ -44,13 +45,16 @@ function indexErrorAction(reducer, tree, content, response) {
 }
 
 function createAction(reducer, tree, content, response, outTree) {
+	var parent = arguments.length <= 5 || arguments[5] === undefined ? false : arguments[5];
+
 	return {
 		type: reducer,
 		tree: tree,
 		content: content,
 		response: response,
 		verb: 'CREATE',
-		outTree: outTree
+		outTree: outTree,
+		parent: parent
 	};
 }
 function createErrorAction(reducer, tree, content, response) {
@@ -116,6 +120,14 @@ function indexSetAction(reducer, tree) {
 		type: reducer,
 		tree: tree,
 		verb: 'SET_INDEX'
+	};
+}
+
+function setAction(reducer, tree) {
+	return {
+		type: reducer,
+		tree: tree,
+		verb: 'SET_GET'
 	};
 }
 

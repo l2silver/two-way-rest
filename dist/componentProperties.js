@@ -4,10 +4,13 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultProperties = undefined;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 exports.urlPath = urlPath;
 exports.getTree = getTree;
-exports.createId = createId;
 exports.convertTree = convertTree;
+exports.createErrors = createErrors;
 exports.createArgs = createArgs;
 
 var _react = require('react');
@@ -57,10 +60,6 @@ function getTree(start) {
 	return url;
 }
 
-function createId() {
-	return Math.random().toString().slice(3);
-}
-
 function convertTree(tree) {
 	if (Object.prototype.toString.call(tree) === '[object Array]') {
 		return tree;
@@ -69,12 +68,32 @@ function convertTree(tree) {
 	}
 }
 
+function createErrors(errors) {
+	if (errors) {
+		if ((typeof errors === 'undefined' ? 'undefined' : _typeof(errors)) == 'object') {
+			return (0, _componentHelpers.mapIf)(errors, function (error) {
+				return _react2.default.createElement(
+					'span',
+					{ className: 'label label-danger' },
+					error
+				);
+			});
+		}
+		return _react2.default.createElement(
+			'span',
+			{ className: 'label label-danger' },
+			errors
+		);
+	}
+	return '';
+}
+
 function createArgs(twr, form) {
 	return (0, _immutable.Map)({
-		reducer: twr.context.reducer,
+		reducer: twr.reducer(),
 		tree: twr.tree(),
 		outTree: twr.outTree(),
-		path: twr.path(),
+		path: twr.path() + (twr.props.pathEnd ? twr.props.pathEnd : ''),
 		form: form,
 		content: (0, _immutable.Map)(twr.props.content),
 		callforward: twr.props.callforward,
@@ -83,13 +102,20 @@ function createArgs(twr, form) {
 		onFailure: twr.props.onFailure,
 		onSuccessCB: twr.props.onSuccessCB,
 		onFailureCB: twr.props.onFailureCB,
-		upload: twr.props.upload
+		upload: twr.props.upload,
+		force: twr.props.force,
+		outTrees: twr.props.outTrees,
+		parent: twr.parent(),
+		id: twr.props.id
 	});
 }
 
 var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	contextTypes: {
 		reducer: _react2.default.PropTypes.string.isRequired
+	},
+	parent: function parent() {
+		return false;
 	},
 	unmount: function unmount() {
 		return true;
@@ -103,7 +129,40 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	componentDidMount: function componentDidMount() {
 		return this.checkTreeChange();
 	},
+	checkForDifferentPageRerender: function checkForDifferentPageRerender(oldTree, newTree) {
+		if (oldTree) {
+			if (oldTree.size != newTree.size) {
+				return true;
+			}
+			if (oldTree.size <= 1) {
+				if ((0, _immutable.is)(oldTree, newTree)) {
+					return false;
+				}
+				return true;
+			}
+
+			var oldId = oldTree.last();
+			var oldPrefix = oldTree.pop().join('/');
+
+			var newId = newTree.last();
+			var newPrefix = newTree.pop().join('/');
+
+			if (isNaN(oldId)) {
+				if (oldId != newId) {
+					return true;
+				}
+			}
+			if (oldPrefix != newPrefix) {
+				return true;
+			}
+		}
+		return false;
+	},
 	checkTreeChange: function checkTreeChange() {
+		if (this.checkForDifferentPageRerender(this.oldTree, this.tree())) {
+			return false;
+		}
+
 		if ((0, _immutable.is)(this.oldTree, this.tree())) {
 			return false;
 		}
@@ -116,15 +175,43 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		this.oldTree = this.tree();
 		return true;
 	},
+	reducer: function reducer() {
+		if (this.props.reducer) {
+			return this.props.reducer;
+		}
+		return this.context.reducer;
+	},
 	page: function page() {
 		if (this.props.state) {
-			return this.props.state[this.context.reducer];
+			return this.props.state[this.reducer()];
 		}
+		return false;
+	},
+	globeType: function globeType() {
 		return false;
 	},
 	instance: function instance() {
 		if (this.page() && this.tree()) {
-			return this.page().getIn(this.tree());
+			if (this.globeType()) {
+				var State = this.page().get(this.globeType());
+				if (State) {
+					var instanceExists = State.getIn(this.tree());
+					if (instanceExists) {
+						return instanceExists.set('_globeTWR', State);
+					}
+				}
+				return (0, _immutable.Map)();
+			}
+			var instance = this.page().getIn(this.tree());
+			if (instance) {
+				if (instance.set) {
+					if ((0, _immutable.is)((0, _immutable.Map)({ TWRShow: true }), instance.delete('_globeTWR'))) {
+						return false;
+					}
+					return instance.set('_globeTWR', this.page());
+				}
+				return instance;
+			}
 		}
 		return false;
 	},
@@ -138,9 +225,10 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		}
 		if (this.props.location) {
 
-			return getTree(this.context.reducer, this.props.location);
+			return getTree(this.reducer(), this.props.location);
 		}
-		return getTree(this.context.reducer);
+		throw 'This instance has no tree instance, or location';
+		//return getTree(this.reducer());
 	},
 	outTree: function outTree() {
 		if (this.props.outTree) {
@@ -162,23 +250,28 @@ var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 		var _this = this;
 
 		if (this.instance() && !(0, _immutable.is)(this.instance(), (0, _immutable.Map)({ TWRShow: true }))) {
-			if (this.props.replace) {
-				return this.props.replace(this);
-			}
-			var DomTag = this.props.tag ? this.props.tag : 'div';
-			var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
-				return _react2.default.cloneElement(child, {
-					instance: _this.instance(),
-					instances: _this.instance(),
-					getIn: _this.getIn,
-					mapIf: _this.mapIf
+			try {
+				if (this.props.replace) {
+					return this.props.replace(this);
+				}
+				var DomTag = this.props.tag ? this.props.tag : 'div';
+				var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
+					return _react2.default.cloneElement(child, {
+						instance: _this.instance(),
+						instances: _this.instance(),
+						getIn: _this.getIn,
+						mapIf: _this.mapIf
+					});
 				});
-			});
-			return _react2.default.createElement(
-				DomTag,
-				{ className: this.props.className ? 'twr ' + this.props.className : 'twr' },
-				childrenWithProps
-			);
+				return _react2.default.createElement(
+					DomTag,
+					{ className: this.props.className ? 'twr ' + this.props.className : 'twr' },
+					childrenWithProps,
+					createErrors(this.instance().get('errors'))
+				);
+			} catch (e) {
+				console.log('ASSEMBLIES ERROR', e);
+			}
 		}
 		return _react2.default.createElement('div', { style: { display: 'none' } });
 	}
@@ -199,7 +292,8 @@ var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties 
 			return _react2.default.createElement(
 				DomTag,
 				{ className: this.props.className ? 'twr ' + this.props.className : 'twr', onClick: this.submitForm },
-				childrenWithProps
+				childrenWithProps,
+				createErrors(this.instance().get('errors'))
 			);
 		}
 		return _react2.default.createElement('div', { style: { display: 'none' } });
@@ -221,7 +315,8 @@ var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 			return _react2.default.createElement(
 				DomTag,
 				{ className: this.props.className ? 'twr ' + this.props.className : 'twr', onSubmit: this.submitForm },
-				childrenWithProps
+				childrenWithProps,
+				createErrors(this.instance().get('errors'))
 			);
 		}
 		return _react2.default.createElement('div', { style: { display: 'none' } });
@@ -230,10 +325,13 @@ var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 
 var defaultCreateSubstate = exports.defaultCreateSubstate = {
 	getId: function getId() {
+		if (this.props.id) {
+			return this.props.id;
+		}
 		if (this.substateId) {
 			return this.substateId;
 		}
-		this.substateId = createId();
+		this.substateId = (0, _componentHelpers.createId)();
 		return this.substateId;
 	},
 	mount: function mount() {
@@ -242,6 +340,12 @@ var defaultCreateSubstate = exports.defaultCreateSubstate = {
 		this.props.substateCreate(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
 			return content.set('id', _this4.getId());
 		}));
+		if (this.props.force && !this.forcedStart) {
+			this.forcedStart = true;
+			this.submitForm({ preventDefault: function preventDefault() {
+					return true;
+				} });
+		}
 	},
 	unmount: function unmount() {
 		var _this5 = this;
@@ -253,11 +357,14 @@ var defaultCreateSubstate = exports.defaultCreateSubstate = {
 };
 
 var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)({
+	globeType: function globeType() {
+		return 'Substate';
+	},
 	getId: function getId() {
 		if (this.substateId) {
 			return substateId;
 		}
-		this.substateId = createId();
+		this.substateId = (0, _componentHelpers.createId)();
 		return this.substateId;
 	},
 	submitForm: function submitForm(event) {
@@ -269,7 +376,10 @@ var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)(
 		}));
 	},
 	path: function path() {
-		return urlPath(this.tree().shift().pop());
+		if (this.props.path) {
+			return this.props.path;
+		}
+		return urlPath(this.tree().pop());
 	}
 });
 
@@ -278,7 +388,7 @@ var defaultPostCreateProperties = exports.defaultPostCreateProperties = (0, _imm
 		if (this.props.outTree) {
 			return (0, _immutable.List)(this.props.outTree);
 		}
-		return this.tree().shift().pop();
+		return this.tree().pop();
 	}
 });
 

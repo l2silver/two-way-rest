@@ -301,6 +301,48 @@ describe('core', ()=>{
 				})
 			);
 		});
+		it.only('success single child', ()=>{
+
+			const tree = List(['users', '12345'])
+			const response = {
+				looks: 'good'
+				, id: 2
+				, child: {id: 1}
+			}
+			const content = Map({looks: 'good', id: '12345'})
+			const state = Map({
+				Substate: Map({
+					users: OrderedMap({
+						'12345': Map(content).merge({tree})
+					})
+				})
+			})	
+			const nextState = create(state, tree, content, response, List(['users', '2']));
+			const expectedState = Map({
+					Substate: Map({
+						users: OrderedMap({
+							12345: Map({looks: '', id: '12345'}).merge({tree})
+						})
+					}),
+					users: Map({
+						2: Map({
+							looks: 'good'
+							, id: 2
+							, childTWR: '1'
+						}).merge({tree: tree.pop().push('2')})
+					}),
+					children: Map({
+						1: Map({
+							id: 1
+							, tree: List(['children', '1'])
+						})
+
+					})
+				});
+			//console.log(nextState);
+			//console.log(expectedState);
+			expect(is(nextState,expectedState)).to.be.true;
+		});
 		it('success parent relations exist', ()=>{
 
 			const tree = List(['users', '12345'])
@@ -521,6 +563,32 @@ describe('core', ()=>{
 					1: Map({
 						id: 1
 						, tree: List(['fake_tests', '1'])
+					})
+				}),
+			});
+
+			expect(mapState(initialObject, List(['tests', '1']), Map())).to.equal(globe);	
+		});
+
+		it('simple w/ single', ()=>{
+			const initialObject = {
+				id: 1
+				, child: 
+					{id: 1}
+			};
+			const globe = Map({
+				tests: Map({
+					1: Map({
+						id: 1
+						, childTWR: '1'
+						, tree: List(['tests', '1'])
+
+					})
+				}),
+				children: Map({
+					1: Map({
+						id: 1
+						, tree: List(['children', '1'])
 					})
 				}),
 			});

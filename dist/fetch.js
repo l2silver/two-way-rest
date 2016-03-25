@@ -34,7 +34,7 @@ function requestObject(method, body, url) {
 function setAddress(url) {
   _methods2.default.map(function (method) {
     if (method == 'delete') {
-      exports['des'] = function (path) {
+      exports['del'] = function (path) {
         var body = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
         if (body) {

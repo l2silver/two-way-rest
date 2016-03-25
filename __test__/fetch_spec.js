@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {setAddress} from './../lib/fetch';
 setAddress('http://localhost:2000');
-import {get, put, post, des, up} from './../lib/fetch';
+import {get, put, post, del, up} from './../lib/fetch';
 import {fromJS, Map, OrderedMap, List, Seq} from 'immutable';
 import nock from 'nock';
 import FormData from 'form-data'
@@ -43,7 +43,7 @@ describe('fetch', ()=>{
 		});
 	});
 	it('destroy', (done)=>{
-		des('/users/1').then((body)=>{
+		del('/users/1').then((body)=>{
 			expect(body.id).to.equal('1');
 			return done();
 		});

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.TWRDestroy = exports.TWRXUpdate = exports.TWRUpdate = exports.TWRCreateChild = exports.TWRCreate = exports.TWRLink = exports.TWRShowFront = exports.TWRShow = exports.TWRIndex = exports.TWRBreadCrumbs = exports.DeclareReducer = exports.StupidTWRLink = exports.StupidTWRBreadCrumbs = exports.StupidTWRCreateChild = exports.StupidTWRCreateFront = exports.StupidTWRCreate = exports.StupidTWRShowFront = exports.StupidTWRShow = exports.StupidTWRIndex = exports.StupidTWRDestroy = exports.StupidTWRXUpdate = exports.StupidTWRUpdateFront = exports.StupidTWRUpdate = undefined;
+exports.TWRDestroyFront = exports.TWRDestroy = exports.TWRXUpdate = exports.TWRUpdate = exports.TWRCreateChild = exports.TWRCreateFront = exports.TWRCreate = exports.TWRLink = exports.TWRIndexFront = exports.TWRShowFront = exports.TWRShow = exports.TWRIndex = exports.TWRBreadCrumbs = exports.DeclareReducer = exports.StupidTWRLink = exports.StupidTWRBreadCrumbs = exports.StupidTWRCreateChild = exports.StupidTWRCreateFront = exports.StupidTWRCreate = exports.StupidTWRIndexFront = exports.StupidTWRShowFront = exports.StupidTWRShow = exports.StupidTWRIndex = exports.StupidTWRDestroyFront = exports.StupidTWRDestroy = exports.StupidTWRXUpdate = exports.StupidTWRUpdateFront = exports.StupidTWRUpdate = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -40,17 +40,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var i = (0, _i2.default)(true);
 
 var StupidTWRUpdate = exports.StupidTWRUpdate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderProperties).merge({
-	getId: function getId() {
-		return this.props.instance.get('id');
+	globeType: function globeType() {
+		return 'Substate';
 	},
 	tree: function tree() {
-		return (0, _immutable.List)(this.props.instance.get('tree')).unshift('Substate');
+		var tree = this.props.instance.get('tree').pop().push(this.getId());
+		return tree;
 	},
 	outTree: function outTree() {
 		if (this.props.outTree) {
 			return (0, _immutable.List)(this.props.outTree);
 		}
-		return this.tree().shift();
+		return this.props.instance.get('tree');
 	},
 	submitForm: function submitForm(event) {
 		var _this = this;
@@ -61,7 +62,7 @@ var StupidTWRUpdate = exports.StupidTWRUpdate = _react2.default.createClass(_com
 		}));
 	},
 	path: function path() {
-		return (0, _componentProperties.urlPath)(this.tree().shift());
+		return (0, _componentProperties.urlPath)(this.props.instance.get('tree'));
 	}
 }).toJS());
 
@@ -70,7 +71,7 @@ var StupidTWRUpdateFront = exports.StupidTWRUpdateFront = _react2.default.create
 		return this.props.instance.get('id');
 	},
 	tree: function tree() {
-		return (0, _immutable.List)(this.props.instance.get('tree')).unshift('Substate');
+		return (0, _immutable.List)(this.props.instance.get('tree'));
 	},
 	outTree: function outTree() {
 		if (this.props.outTree) {
@@ -96,7 +97,7 @@ var StupidTWRXUpdate = exports.StupidTWRXUpdate = _react2.default.createClass(_c
 		return this.props.instance.get('id');
 	},
 	tree: function tree() {
-		return (0, _immutable.List)(this.props.instance.get('tree')).unshift('Substate');
+		return (0, _immutable.List)(this.props.instance.get('tree'));
 	},
 	outTree: function outTree() {
 		if (this.props.outTree) {
@@ -113,15 +114,54 @@ var StupidTWRXUpdate = exports.StupidTWRXUpdate = _react2.default.createClass(_c
 		}));
 	},
 	path: function path() {
-		return (0, _componentProperties.urlPath)(this.tree().shift());
+		return (0, _componentProperties.urlPath)(this.tree());
 	}
 }).toJS());
 
-var StupidTWRDestroy = exports.StupidTWRDestroy = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostProperties).merge(_componentProperties.defaultPostRenderClickProperties).merge({
+var StupidTWRDestroy = exports.StupidTWRDestroy = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostProperties).merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderClickProperties).merge({
+	tree: function tree() {
+		return (0, _immutable.List)(this.props.instance.get('tree'));
+	},
+	outTree: function outTree() {
+		return this.tree();
+	},
 	submitForm: function submitForm(event) {
 		event.preventDefault();
-		this.props.destroy((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+		if (this.props.noPrompt) {
+			return this.props.destroy((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+		}
+		var result = confirm(this.props.prompt ? this.props.promp : 'Are you sure you want to delete?');
+		if (result) {
+			return this.props.destroy((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+		}
+	},
+	path: function path() {
+		return (0, _componentProperties.urlPath)(this.tree());
 	}
+
+}).toJS());
+
+var StupidTWRDestroyFront = exports.StupidTWRDestroyFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostProperties).merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderClickProperties).merge({
+	tree: function tree() {
+		return (0, _immutable.List)(this.props.instance.get('tree'));
+	},
+	outTree: function outTree() {
+		return this.tree();
+	},
+	submitForm: function submitForm(event) {
+		event.preventDefault();
+		if (this.props.noPrompt) {
+			return this.props.destroyFront((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+		}
+		var result = confirm(this.props.prompt ? this.props.promp : 'Are you sure you want to delete?');
+		if (result) {
+			return this.props.destroyFront((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
+		}
+	},
+	path: function path() {
+		return (0, _componentProperties.urlPath)(this.tree());
+	}
+
 }).toJS());
 
 var StupidTWRIndex = exports.StupidTWRIndex = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetProperties).merge({
@@ -137,39 +177,45 @@ var StupidTWRShow = exports.StupidTWRShow = _react2.default.createClass(_compone
 
 var StupidTWRShowFront = exports.StupidTWRShowFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetRenderProperties).toJS());
 
+var StupidTWRIndexFront = exports.StupidTWRIndexFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetRenderProperties).toJS());
+
 var StupidTWRCreate = exports.StupidTWRCreate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
 	tree: function tree() {
-		return (0, _immutable.List)(this.props.tree).unshift('Substate').push(this.getId());
+		return (0, _immutable.List)(this.props.tree).push(this.getId());
 	}
 }).toJS());
 
 var StupidTWRCreateFront = exports.StupidTWRCreateFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
 	tree: function tree() {
-		return (0, _immutable.List)(this.props.tree).unshift('Substate').push(this.getId());
+		return (0, _immutable.List)(this.props.tree).push(this.getId());
 	},
 	submitForm: function submitForm(event) {
 		var _this4 = this;
 
 		event.preventDefault();
-		var tree = this.props.instance.get('tree');
-		var parentInstanceName = tree.pop().last();
-		this.props.createFront((0, _componentProperties.createArgs)(this, event.target).update('content', function (content) {
+		var tree = this.instance().get('tree');
+		this.props.createFront((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
 			return content.set('id', _this4.getId());
 		}));
 	}
 }).toJS());
 
 var StupidTWRCreateChild = exports.StupidTWRCreateChild = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
+	parent: function parent() {
+		return (0, _immutable.List)([this.props.instance.get('tree').first(), this.props.instance.get('tree').last()]);
+	},
 	tree: function tree() {
-		return (0, _immutable.List)(this.props.instance.get('tree')).unshift('Substate').push(this.props.childName).push(this.getId());
+		return (0, _immutable.List)([this.props.childName, this.getId()]);
 	},
 	submitForm: function submitForm(event) {
 		var _this5 = this;
 
 		event.preventDefault();
+		console.log('this', this);
+
 		var tree = this.props.instance.get('tree');
 		var parentInstanceName = tree.pop().last();
-		this.props.create((0, _componentProperties.createArgs)(this, event.target).update('content', function (content) {
+		this.props.create((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
 			return content.set('id', _this5.getId()).set(parentInstanceName.singularize + '_id', _this5.props.instance.get('id').toString());
 		}));
 	}
@@ -194,7 +240,7 @@ var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.create
 		}
 	},
 	generateNameLink: function generateNameLink(currentValue, originTree, index) {
-		var currentTree = this.getCurrentTree(this.context.reducer, currentValue);
+		var currentTree = this.getCurrentTree(this.reducer(), currentValue);
 		var linkProps = this.props.map[currentValue];
 		if (linkProps && linkProps.return !== false) {
 			return _react2.default.createElement(
@@ -202,7 +248,7 @@ var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.create
 				null,
 				_react2.default.createElement(
 					_reactRouter.Link,
-					{ to: this.context.reducer + '/' + currentTree.join('/') + linkProps.return },
+					{ to: this.reducer() + '/' + currentTree.join('/') + linkProps.return },
 					this.convertCurrentValueToName(currentValue)
 				)
 			);
@@ -210,7 +256,7 @@ var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.create
 	},
 	generateIdLink: function generateIdLink(currentValue, originTree, index) {
 		var lastValue = originTree[index - 1];
-		var currentTree = this.getCurrentTree(this.context.reducer, lastValue).push(currentValue);
+		var currentTree = this.getCurrentTree(this.reducer(), lastValue).push(currentValue);
 		var linkProps = this.props.map[lastValue];
 
 		if (linkProps && linkProps.id !== false) {
@@ -219,7 +265,7 @@ var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.create
 				null,
 				_react2.default.createElement(
 					_reactRouter.Link,
-					{ to: this.context.reducer + '/' + currentTree.join('/') + linkProps.id },
+					{ to: this.reducer() + '/' + currentTree.join('/') + linkProps.id },
 					this.page().getIn(currentTree.push('name'))
 				)
 			);
@@ -235,7 +281,7 @@ var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.create
 	generateLinks: function generateLinks() {
 		var _this6 = this;
 
-		var tree = (0, _componentProperties.getTree)(this.context.reducer).toArray();
+		var tree = (0, _componentProperties.getTree)(this.reducer()).toArray();
 		return tree.map(function (currentValue, index, originTree) {
 			if (index + 1 != originTree.length) {
 				return _this6.generateLink(currentValue, originTree, index);
@@ -272,18 +318,14 @@ var StupidTWRLink = exports.StupidTWRLink = _react2.default.createClass(_compone
 		return '';
 	},
 	to: function to() {
-		return this.context.reducer + '/' + this.tree().join('/') + this.rest();
+		return this.reducer() + '/' + this.tree().join('/') + this.rest();
 	},
 	render: function render() {
-		if (this.instance()) {
-			return _react2.default.createElement(
-				_reactRouter.Link,
-				{ to: this.to() },
-				this.props.children
-			);
-		} else {
-			return _react2.default.createElement('a', null);
-		}
+		return _react2.default.createElement(
+			_reactRouter.Link,
+			{ to: this.to() },
+			this.props.children
+		);
 	}
 }).toJS());
 
@@ -321,9 +363,13 @@ var TWRShow = exports.TWRShow = (0, _reactRedux.connect)(mapStateToProps, action
 
 var TWRShowFront = exports.TWRShowFront = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRShowFront);
 
+var TWRIndexFront = exports.TWRIndexFront = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRIndexFront);
+
 var TWRLink = exports.TWRLink = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRLink);
 
 var TWRCreate = exports.TWRCreate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRCreate);
+
+var TWRCreateFront = exports.TWRCreateFront = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRCreateFront);
 
 var TWRCreateChild = exports.TWRCreateChild = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRCreateChild);
 
@@ -332,3 +378,5 @@ var TWRUpdate = exports.TWRUpdate = (0, _reactRedux.connect)(mapStateToProps, ac
 var TWRXUpdate = exports.TWRXUpdate = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRXUpdate);
 
 var TWRDestroy = exports.TWRDestroy = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRDestroy);
+
+var TWRDestroyFront = exports.TWRDestroyFront = (0, _reactRedux.connect)(mapStateToProps, actionCreators)(StupidTWRDestroyFront);
