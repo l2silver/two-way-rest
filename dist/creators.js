@@ -9,7 +9,6 @@ exports.getMergeInList = getMergeInList;
 exports.convertToArrayIf = convertToArrayIf;
 exports.checkMulti = checkMulti;
 exports.getContent = getContent;
-exports.urlPath = urlPath;
 exports.calls = calls;
 exports.callforwardCreator = callforwardCreator;
 exports.callbackCreator = callbackCreator;
@@ -21,8 +20,8 @@ exports.endPromises = endPromises;
 exports.postRequestCreator = postRequestCreator;
 exports.responseCreator = responseCreator;
 exports.coreGET = coreGET;
-exports.substateDelete = substateDelete;
-exports.substateCreate = substateCreate;
+exports.substateDeleteCreator = substateDeleteCreator;
+exports.substateCreateCreator = substateCreateCreator;
 exports.create = create;
 exports.update = update;
 exports.destroy = destroy;
@@ -132,10 +131,6 @@ function getContent(content) {
 		return nextObject;
 	}, (0, _immutable.Map)());
 	return contentMap;
-}
-
-function urlPath(tree) {
-	return '/' + tree.join('/');
 }
 
 function calls(args, type) {
@@ -254,14 +249,14 @@ function coreGET(args, type) {
 	};
 }
 
-function substateDelete(args) {
+function substateDeleteCreator(args) {
 	return function (dispatch, getState) {
 		var content = getContent(args.get('form'));
 		return dispatch(actions.substateDeleteAction(args.get('reducer'), args.get('tree'), content.toJS()));
 	};
 }
 
-function substateCreate(args) {
+function substateCreateCreator(args) {
 	return function (dispatch, getState) {
 		var content = getContent(args.get('form')).merge(args.get('content'));
 		return dispatch(actions.substateCreateAction(args.get('reducer'), args.get('tree'), content.toJS()));
@@ -341,6 +336,9 @@ function createFront(args) {
 function updateFront(args) {
 	return function (dispatch, getState) {
 		function responsePromise(args) {
+			var newId = getId(args);
+			var response = { id: newId };
+			console.log('newId', newId);
 			return responseCreator({}, args);
 		}
 		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'update' });

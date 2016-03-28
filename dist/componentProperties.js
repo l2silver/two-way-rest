@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultProperties = undefined;
+exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostUpdateProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultProperties = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -95,7 +95,7 @@ function createArgs(twr, form) {
 		outTree: twr.outTree(),
 		path: twr.path() + (twr.props.pathEnd ? twr.props.pathEnd : ''),
 		form: form,
-		content: (0, _immutable.Map)(twr.props.content),
+		content: twr.createContent(),
 		callforward: twr.props.callforward,
 		callback: twr.props.callback,
 		onSuccess: twr.props.onSuccess,
@@ -113,6 +113,24 @@ function createArgs(twr, form) {
 var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	contextTypes: {
 		reducer: _react2.default.PropTypes.string.isRequired
+	},
+	createDisposableContent: function createDisposableContent(content) {
+		this.disposableContent = content;
+	},
+	resetDisposableContent: function resetDisposableContent() {
+		this.disposableContent = false;
+	},
+	createContent: function createContent() {
+		var content = this.disposableContent ? (0, _immutable.Map)(Object.assign({}, this.disposableContent)) : (0, _immutable.Map)(this.props.content);
+		console.log('CONTENT', content.toJS());
+		this.resetDisposableContent();
+		return content;
+	},
+	submitContent: function submitContent(content) {
+		this.createDisposableContent(content);
+		return this.submitForm({ preventDefault: function preventDefault() {
+				return true;
+			} });
 	},
 	parent: function parent() {
 		return false;
@@ -337,7 +355,7 @@ var defaultCreateSubstate = exports.defaultCreateSubstate = {
 	mount: function mount() {
 		var _this4 = this;
 
-		this.props.substateCreate(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
+		this.props.substateCreateCreator(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
 			return content.set('id', _this4.getId());
 		}));
 		if (this.props.force && !this.forcedStart) {
@@ -350,7 +368,7 @@ var defaultCreateSubstate = exports.defaultCreateSubstate = {
 	unmount: function unmount() {
 		var _this5 = this;
 
-		this.props.substateDelete(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
+		this.props.substateDeleteCreator(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
 			return content.set('id', _this5.getId());
 		}));
 	}
@@ -380,6 +398,33 @@ var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)(
 			return this.props.path;
 		}
 		return urlPath(this.tree().pop());
+	}
+});
+
+var defaultPostUpdateProperties = exports.defaultPostUpdateProperties = (0, _immutable.Map)({
+	globeType: function globeType() {
+		return 'Substate';
+	},
+	tree: function tree() {
+		var tree = this.props.instance.get('tree').pop().push(this.getId());
+		return tree;
+	},
+	outTree: function outTree() {
+		if (this.props.outTree) {
+			return (0, _immutable.List)(this.props.outTree);
+		}
+		return this.props.instance.get('tree');
+	},
+	submitForm: function submitForm(event) {
+		var _this7 = this;
+
+		event.preventDefault();
+		this.props.update(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
+			return content.set('id', _this7.getId());
+		}));
+	},
+	path: function path() {
+		return urlPath(this.props.instance.get('tree'));
 	}
 });
 
