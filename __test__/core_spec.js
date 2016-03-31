@@ -18,192 +18,25 @@ import {
 	, idArray
 	, orderedMap
 	, createMapObject
+	, custom
 	
 } from './../lib/core';
 
-
-/*
-
-
-The NEXT PHASE: CELA
-
-I need to figure out how the substate will work. What might make the most sense at this point is a another variable called 
-
-globeType, live, substate
-
-If we include the globeType, everything becomes simpler.
-
-Base Set, Delete, Merge based off of tree.
-
-How do we put things into the globe. We mapState the objects into the globe.
-
-How can I get started? Piece by piece, I'll have to change everything.
-
-But, what could be nice is a simpler structure.
-
-Base create, update are almost identical, except for the rest action, and their ids.
-
-Base delete is different.
-
-Show and index are the same, and should be relegated to one line? It is one action.
-
-Create, Update, Delete, Get
-
-FrontCreate ...
-
-
-
-
-
-
-
-
-
-
-*/
 
 import {fromJS, Map, OrderedMap, List, Seq, is} from 'immutable';
 import inflect from 'i';
 inflect(true);
 
 describe('core', ()=>{
-	
-/*
-	describe('transformResponse', ()=>{
-		it('two degrees', ()=>{
-			const tree = List(['orange']);
-			const orderedArray = { id: 1, types: [{ id: 1}] };
-			const result = transformResponse(orderedArray, tree);
-			expect(result).to.equal(
-				Map({
-					  id: 1
 
-					, types: OrderedMap([
-						['1'
-						, Map({
-							  id: 1
-							, tree: List(['orange', '1', 'types', '1'])
-							})
-						]
-					])
-					, tree: tree.push('1')
-				})
-			)
-		})
-	});
-
-	it('convertArrayToOrderedMap', ()=>{
-		const instanceOne = {id:4};
-		const instanceTwo = {id:1};
-		const orderedArray = [
-								  instanceOne
-								, instanceTwo
-							];
-		const fn = (v, tree)=>{return v};
-		expect(convertArrayToOrderedMap(orderedArray, fn, 0)).to.equal(
-			OrderedMap(
-				[
-					   ['4', instanceOne]
-					 , ['1', instanceTwo]
-				]
-			)
-		);
-	});
-	describe('fromJSOrdered', ()=>{
-		it('simple', ()=>{
-			const orderedArray = [{id:4}, {id:1}];
-			expect(fromJSOrdered(orderedArray)).to.equal(
-				OrderedMap(
-					[
-					 ['4', Map({id:4})]
-					,['1', Map({id:1})]
-					]
-				)
-			);
-		});
-		it('complex', ()=>{
-			const orderedArray = [{id:4, types: [{id: 1}]}];
-			expect(fromJSOrdered(orderedArray)).to.equal(
-				OrderedMap(
-					[
-					 ['4', Map({
-					 	  id:4
-					 	, types: OrderedMap([
-					 		['1', Map({id: 1})]
-					 	])
-					})]
-					]
-				)
-			);
-		});
-		it('with non id array', ()=>{
-			const orderedArray = [{id:4, types: ['shoes', 'socks']}];
-			expect(fromJSOrdered(orderedArray)).to.equal(
-				OrderedMap(
-					[
-					 ['4', Map({
-					 	  id:4
-					 	, types: OrderedMap([
-					 		['shoes', 'shoes']
-					 		,['socks', 'socks']
-					 	])
-					})]
-					]
-				)
-			);
-		});
-	});
-	*/
-/*
-	const state = Map({
-		users: OrderedMap()
-		, Substate: Map()
+	it('custom', ()=>{
+		const state = Map();
+		function fn(state){
+			return state.set('users', true)
+		}
+		const nextState = custom(state, fn)
+		expect(nextState).to.equal(Map({users: true}))
 	})
-
-
-	it('setMaps', ()=>{		
-		const nextState = setMaps(state, ['users', '1', 'subusers', '2']);
-		expect(nextState).to.equal(
-			Map({
-				users: OrderedMap({
-					1: Map({
-						subusers: OrderedMap({2: Map()
-						})
-					})
-				})
-				, Substate: Map()
-			})
-		);
-	});
-	it('setMaps Subtree', ()=>{		
-		const nextState = setMaps(state, ['Substate', 'users', '1', 'subusers', '2']);
-		expect(nextState).to.equal(
-			Map({
-				users: OrderedMap()
-				, Substate: Map({
-					users: OrderedMap({
-						1: Map({
-							subusers: OrderedMap({2: Map()
-							})
-						})
-					})
-				})
-			})
-		);
-	});
-
-	it('checkTreeExists', ()=>{		
-		const nextState = checkTreeExists(state, ['users', '1'], '1');
-		expect(nextState).to.equal(
-			Map({
-				users: OrderedMap({
-					1: Map()
-				})
-				, Substate: Map()
-			})
-		);
-	});
-	*/
 	describe('create', ()=>{
 		describe('substate', ()=>{
 			it('success', ()=>{
@@ -301,7 +134,7 @@ describe('core', ()=>{
 				})
 			);
 		});
-		it.only('success single child', ()=>{
+		it('success single child', ()=>{
 
 			const tree = List(['users', '12345'])
 			const response = {

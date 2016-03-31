@@ -13,6 +13,8 @@ import {
 	, createEventTrain
 	, combineContent
 	, endPromises
+	, customCreator
+	, customAction
 
 } from './../lib/creators';
 import {fromJS, Map, OrderedMap, Is, List, Seq} from 'immutable';
@@ -45,6 +47,29 @@ describe('creators', ()=>{
 		form,
 		tree,
 		reducer
+	})
+	it('customAction', ()=>{
+		function fn(){
+			return false
+		}
+		expect(customAction('reducer', fn)).to.eql({
+			fn,
+			type: 'reducer',
+			verb: 'CUSTOM'
+		})
+	})
+	it('customCreator', ()=>{
+		function fn(){
+			return false
+		}
+		function dispatch(action){
+			return action
+		}
+		expect(customCreator('reducer', fn)(dispatch)).to.eql({
+			fn,
+			type: 'reducer',
+			verb: 'CUSTOM'
+		})
 	})
 	describe('calls', ()=>{
 		it('type exists', (done)=>{
