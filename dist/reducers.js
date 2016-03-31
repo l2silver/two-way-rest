@@ -8,16 +8,27 @@ exports.generateRestSwitch = generateRestSwitch;
 
 var _core = require('./core');
 
+var _immutable = require('immutable');
+
 function combineSwitches(list) {
-	return list.reduce(function (previousFunction, currentFunction) {
-		return function (state, action) {
-			return previousFunction(currentFunction(state, action), action);
-		};
-	});
+	if (list.length > 1) {
+		return list.reduce(function (previousFunction, currentFunction) {
+			return function (state, action) {
+				return previousFunction(currentFunction(state, action), action);
+			};
+		});
+	}
+	if (list.length == 1) {
+		return list[0];
+	}
+	throw 'combineSwitches requires atleast one switch function';
 }
 
 function generateRestSwitch(reducer) {
-	return function (state, action) {
+	return function () {
+		var state = arguments.length <= 0 || arguments[0] === undefined ? (0, _immutable.Map)() : arguments[0];
+		var action = arguments[1];
+
 		switch (action.type) {
 			case reducer:
 				switch (action.verb) {

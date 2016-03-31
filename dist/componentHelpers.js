@@ -11,7 +11,7 @@ exports.createId = createId;
 exports.reverseTree = reverseTree;
 exports.checkBranch = checkBranch;
 exports.mapIf = mapIf;
-exports.getTree = getTree;
+exports.getTreeStart = getTreeStart;
 exports.getInstance = getInstance;
 exports.indexCheck = indexCheck;
 exports.showCheck = showCheck;
@@ -104,7 +104,7 @@ function mapIf(immutableObject, fn, False) {
 	}
 }
 
-function getTree(start, popNot) {
+function getTreeStart(start, popNot) {
 	var fullUrl = (0, _immutable.List)(window.location.href.split('/'));
 	var index = fullUrl.indexOf(start);
 	var url = fullUrl.slice(index);
