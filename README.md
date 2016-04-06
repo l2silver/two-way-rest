@@ -98,7 +98,52 @@ fullState = {reducerName_1: reducerState_1, ...}
 
 # Inner Workings
 ### Frontend Relational Immutable Database
-Two-way-rest is powered by a frontend pseudo-relational database called the globe. Every reducer's state is its own globe. 
+Two-way-rest is powered by a frontend pseudo-relational database called globe. Every reducer's state is a globe, and changes to the globe are generally made by passing it either an object, or an array of objects.
+
+### Substate
+Every globe has a Substate property which holds the intermittent state of an instance before it is either created, updated, or destroyed.
+
+### Components
+Two-way-rest components... tbc.
+
+### REST Expectations
+Index: Returns an array
+Everything else: Returns an object
+Errors: Object with an errors property
+
+### Component Actioncycle
+All two-way-rest components have the same actioncycle that can be tapped into by declaring function using the prop of the appropriate name
+
+callforward-->
+defaultAction-->
+onSuccessCB || onFailureCB-->
+callback
+
+These functions are wrapped in bluebird's Promise.Method, so they accept promises. 
+
+They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args with the same properties. 
+The args Map:
+reducer: <string> name of reducer
+tree: <List:Immutable> frontend/backend location of instance
+outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)
+path: <string> url starting from http://remoteurl.com/... (defaults to tree) + this.props.endPath <string> rest action like 'edit', 'show', etc.
+form: <DOM:element> the entire component element
+content: <Map:Immutable> this.props.content object
+callforward: <function>
+callback: <function>
+onSuccessCB: <function>
+onFailureCB: <function>
+onSuccess: <object> passed to instance on success
+onFailure: <object> passed to instance on failure
+upload: <boolean> is one of the fields in the component a file field
+force: <boolean> should a component refire its standard ajax call everytime it is updated
+parent: <boolean> true for CreateChildComponents
+id: <string> declared using this.props.id, forces a create component to use the declared id
+twr: <Component> the component itself
+response: <object | array> declared using this.props.response, skips ajax call and returns response
+dispatch: <function> disptach function
+getState: <getState> getState function
+
 
 # Usage
 *For a working example, please checkout the two-way-rest-boilerplate*
