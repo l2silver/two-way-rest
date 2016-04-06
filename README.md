@@ -104,7 +104,7 @@ Two-way-rest is powered by a frontend pseudo-relational database called globe. E
 Every globe has a Substate property which holds the intermittent state of an instance before it is either created, updated, or destroyed.
 
 ### Components
-Two-way-rest components... tbc.
+There are two types of two-way-rest components: Getters and Posters. Getters retrieve instances, and Posters mutate instances. Getters include index and show components, and Posters are creates, update, and destroy. Every component sends an instance of itself to the props.instance(s) of its children, however while Getters send the actual instance, Posters send a substate instance if it exists. (Substate instances are created on errors or successes )
 
 ### REST Expectations
 Index: Returns an array
@@ -121,7 +121,8 @@ callback
 
 These functions are wrapped in bluebird's Promise.Method, so they accept promises. 
 
-They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args with the same properties. 
+They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. 
+
 The args Map:
 reducer: <string> name of reducer
 tree: <List:Immutable> frontend/backend location of instance
@@ -205,18 +206,44 @@ type: Array
 purpose: change the frontend location of where the results should be merged with.
 example_1: 
 ```
-<TWRShow tree={['users', '1']}> ==> sends its children an 
-	instance prop of the get response to http://remoteUrl/users/1
-<TWRUpdate instance={ this.props.instance} /> ==> uses the 
-	instance prop's tree set the tree of the component 
-```
-example_2:  
-```
-this.props.instance.gex('children') ==> an array of child instances
+<TWRShow tree={['users', '1']} outTree={{'users', '2'}}> ==> Get the user 1 backend
+instance and replace the user 2 frontend instance with it
 ```
 
-example_3:  
+__replace__
+type: Function
+purpose: replace the component's DOM with a new DOM that has access to all of the component's functions
+example_1: 
 ```
-this.props.instance.gex('child') ==> a child instance
+<TWRShow tree={['users', '1']} replace={(user_1)=>{
+	console.log(user_1.instance(), 'returns the frontend instance')
+	return <p>{user_1.instance().get('name')}</p>
+}}
 ```
 
+__custom__
+type: Function
+purpose: return a custom reducer function that takes the reducer state as an argument and returns a new reducer state
+example_1: 
+```
+<TWRShow tree={['users', '1']} replace={(user_1)=>{
+	return <TWRCreate onClick={()=>{
+		user_1.custom((state)=>state.set('name', 'Example'))
+	}} /> 
+}} />==> 
+```
+
+__customAction__
+type: Function
+purpose: an action creator for custom functions
+example_1: 
+```
+<TWRUpdate tree={['users', '1']} callforward={(args)=>{
+	args.get('dispatch')(
+		args.get('twr').customAction(
+			(state)=>state.set('name', 'Example')
+	))
+	return args
+	
+}} />
+```
