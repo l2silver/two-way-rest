@@ -1,6 +1,6 @@
 # Two-Way-Rest
 
-A react-redux plugin that facilitates changes to the state and backend data sources.
+A lot of things, but more specifically a react-redux plugin that facilitates changes to the state and backend data sources.
 
 Example:
 ```
@@ -87,154 +87,136 @@ const twoWayRestSwitch = generateRestSwitch('reducerName');
 export default combineSwitches([normalReducerSwitch, twoWayRestSwitch]);
 
 ```
-We need to make certain the state is a immutable map object, so the twoWayRestSwitch should always be last. The immutable library is an integral component of two-way-rest.
+We need to make certain the state is an immutable map object, so the twoWayRestSwitch should always be last. The immutable library is an integral component of two-way-rest. 
 
-### Usage
+### State Format
 
-I’ll demonstrate how to use the system by building a simple site.
+Although the two-way-rest plugin does not need the combineReducers function from redux, it does require the same state reducer format:
+```
+fullState = {reducerName_1: reducerState_1, ...}
+```
 
-```
-<DeclareReducer reducer=’main’>
-	<TWRIndex tree=’users’>
-		<DisplayUserNameInList>
-	</TWRIndex>
-</DeclareReducer>
-```
-The TWRIndex uses the tree information to send a get request to
-```
-http://remoteurl/users
-```
-Which returns an array of json objects
-```
-[
-{
-id: 1, 
-name: ‘Carole’, 
-pets:[{id: 1, type: ‘fish}]
-}, 
-{
-id: 2, 
-name: Jimmer, 
-pets:[]
-}
-]
-```
-The TWR index then passes its children the instances prop.
-```
-class DisplayUserNameInList extends Component {
-render(){
-	return <ul>
-	{
-this.props.instances.map((user)=>{
-return <li>{user.get(‘name’)}</li>
-})
-}
-</ul>
-}
-}
-```
-All of this returns
-```
-<ul>
-	<li>Carole</li>
-	<li>Jimmer/li>
-</ul>
-```
-So lets expand the functionality by changing the DisplayUserNameInList
-```
-class DisplayUserNameInList extends Component {
-render(){
-	return <ul>
-	{
-this.props.instances.map((user)=>{
-return <li>
-<TWRUpdate instance={user}>
-	<input type=’text’ name=’name’ defaultValue={user.get(‘name’)} />
-<input type=’submit’ value=’save’ />
-<TWRUpdate>
-```
-or
-```
-<TWRXUpdate instance={userInstance}, xUpdate={{visible: true}}>
-	<input type=’text’ name=’visible’ value=’true’ />
-	<input type=’submit’ />
-</TWRUpdate>
-```
-or 
-```
-<TWRXUpdate instance={userInstance} render={()=>{return <form><input type=’text’ name=’visible’ value=’true’ /><input type=’submit’ /></form>}}>
-	<input type=’text’ name=’visible’ value=’true’ />
-	<input type=’submit’ />}/>
-</TWRUpdate>
+# Inner Workings
+### Frontend Relational Immutable Database
+Two-way-rest is powered by a frontend pseudo-relational database called globe. Every reducer's state is a globe, and changes to the globe are generally made by passing it either an object, or an array of objects.
 
-</li>
-})
-}
-</ul>
-}
-}
-```
-If a user changes Carole’s name to Cara and clicks the save button, the TWRUpdate sends a put request to 
-```
-http://remoteurl/users/1
-```
-And returns an object 
-```
-{
-	id: 1, 
-	name: ‘Cara’
-}
-```
-We update the state with this object, which updates the DOM
-```
-<ul>
-	<li>
-<input ...Cara>
-<input submit>
-</li>
-	<li>
-<input ...Carole>
-<input submit>
-</li>
-</ul>
-```
-There are two key points here. 
+### Substate
+Every globe has a Substate property which holds the intermittent state of an instance before it is either created, updated, or destroyed.
 
-The first is that once we get an object from a database(or array of objects), those objects are ready to be used in any TWR form we have. All we need to do is pass the form the object in the instance prop.
+### Components
+Two-way-rest components... tbc.
 
-The second is that when we send any kind of individual request (anything except index), we need the response to be an object. The returned object is merged with the same object in the state.
+### REST Expectations
+Index: Returns an array
+Everything else: Returns an object
+Errors: Object with an errors property
 
-Suppose for example, there was an error when we tried to change Carole’s name.
+### Component Actioncycle
+All two-way-rest components have the same actioncycle that can be tapped into by declaring function using the prop of the appropriate name
 
-The correct error response would be `{errors: ‘The user name must be at least 6 characters’}`
+callforward-->
+defaultAction-->
+onSuccessCB || onFailureCB-->
+callback
 
-Not only is this an object, but TWR actually looks for the error property in the returned object to determine whether an error occurred or not.
+These functions are wrapped in bluebird's Promise.Method, so they accept promises. 
 
-Lastly, suppose we wanted to add a pet to the user.
+They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args with the same properties. 
+The args Map:
+reducer: <string> name of reducer
+tree: <List:Immutable> frontend/backend location of instance
+outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)
+path: <string> url starting from http://remoteurl.com/... (defaults to tree) + this.props.endPath <string> rest action like 'edit', 'show', etc.
+form: <DOM:element> the entire component element
+content: <Map:Immutable> this.props.content object
+callforward: <function>
+callback: <function>
+onSuccessCB: <function>
+onFailureCB: <function>
+onSuccess: <object> passed to instance on success
+onFailure: <object> passed to instance on failure
+upload: <boolean> is one of the fields in the component a file field
+force: <boolean> should a component refire its standard ajax call everytime it is updated
+parent: <boolean> true for CreateChildComponents
+id: <string> declared using this.props.id, forces a create component to use the declared id
+twr: <Component> the component itself
+response: <object | array> declared using this.props.response, skips ajax call and returns response
+dispatch: <function> disptach function
+getState: <getState> getState function
+
+
+# Usage
+*For a working example, please checkout the two-way-rest-boilerplate*
+
+# Component Properties
 ```
-class DisplayUserNameInList extends Component {
-render(){
-	return <ul>
-	{
-this.props.instances.map((user)=>{
-return <li>
-<TWRUpdate instance={user}>
-	<input type=’text’ name=’name’ defaultValue={user.get(‘name’)} />
-<input type=’submit’ value=’save’ />
-<TWRUpdate
-<TWRCreateChild instance={user} childName=’pets’>
-	<input type=’text’ name=’name’ placeholder=’Pet Name’/>
-<input type=’submit’ value=’Add’ />
-</TWRCreateChild’>
-</li>
-})
-}
-</ul>
-}
-}
+<TWR* properties...>
 ```
-This would send a rest post request to `http://remoteurl/users/1/pets`, with the following post variables:
+__tree__  
+type: Array  
+purpose: the backend and frontend location of where a TWR component will act  
+example_1: 
 ```
-user_id: 1
-name: ‘’
+['users', '1'] (used for updates/destructions of a specific instance)  
+== 'http://remoteurl/users/1' (backend) 
+== reducerState.immutable = {users: {1: {id: 1, name: 'joe'}}} (frontend)
 ```
+
+example_2: 
+```
+['users'] (used for create/index of a specific instance)  
+== 'http://remoteurl/users' (backend) 
+== reducerState.immutable = {users: {...the results of a create/index} (frontend)
+```
+
+__location__
+type: string url
+purpose: parsed to find the tree of an instance
+example_1: 
+```
+<TWRShow location='/admin/users/1/edit' > ==> tree = ['users', '1'] 
+(Starts parse at reducer name if reducer name is in url, 
+removes rest words like index, edit, and create from the end of a url)
+```
+
+
+__instance__
+type: immutable object with tree and _globeTWR property
+purpose: the frontend representation of a backend object
+example_1: 
+```
+<TWRShow tree={['users', '1']}> ==> sends its children an 
+	instance prop of the get response to http://remoteUrl/users/1
+<TWRUpdate instance={ this.props.instance} /> ==> uses the 
+	instance prop's tree set the tree of the component 
+```
+example_2:  
+```
+this.props.instance.gex('children') ==> an array of child instances
+```
+
+example_3:  
+```
+this.props.instance.gex('child') ==> a child instance
+```
+
+__outTree__
+type: Array
+purpose: change the frontend location of where the results should be merged with.
+example_1: 
+```
+<TWRShow tree={['users', '1']}> ==> sends its children an 
+	instance prop of the get response to http://remoteUrl/users/1
+<TWRUpdate instance={ this.props.instance} /> ==> uses the 
+	instance prop's tree set the tree of the component 
+```
+example_2:  
+```
+this.props.instance.gex('children') ==> an array of child instances
+```
+
+example_3:  
+```
+this.props.instance.gex('child') ==> a child instance
+```
+
