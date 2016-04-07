@@ -98,9 +98,6 @@ var StupidTWRDestroy = exports.StupidTWRDestroy = _react2.default.createClass(_c
 }).toJS());
 
 var StupidTWRDestroyFront = exports.StupidTWRDestroyFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostProperties).merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderClickProperties).merge({
-	getTree: function getTree(props) {
-		return (0, _immutable.List)(props.instance.get('tree'));
-	},
 	outTree: function outTree() {
 		return this.tree();
 	},

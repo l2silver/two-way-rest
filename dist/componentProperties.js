@@ -386,7 +386,6 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 			return props.instance.get('tree');
 		}
 		throw 'This instance has no tree instance, or location';
-		//return getTree(this.reducer());
 	},
 	outTree: function outTree() {
 		if (this.props.outTree) {
@@ -487,7 +486,7 @@ var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 			});
 			return _react2.default.createElement(
 				DomTag,
-				{ style: this.props.style, className: this.props.className ? 'twr ' + this.props.className : 'twr', onSubmit: this.submitForm },
+				{ style: this.props.style, className: this.props.className ? 'twr ' + this.props.className : 'twr', onClick: this.props.click ? this.submitForm : function () {}, onSubmit: this.submitForm },
 				childrenWithProps,
 				createErrors(this.instance())
 			);

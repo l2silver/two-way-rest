@@ -69,9 +69,6 @@ function createErrorAction(reducer, tree, content, response) {
 }
 
 function updateAction(reducer, tree, content, response, outTree) {
-	//window.alerts.alert("Save Successful!", "Your updates have been saved.", "success");
-	//console.log("TESTING TWR tree", tree);
-	//console.log("TESTING TWR outtree", response);
 	return {
 		type: reducer,
 		tree: tree,
@@ -83,7 +80,6 @@ function updateAction(reducer, tree, content, response, outTree) {
 }
 
 function updateErrorAction(reducer, tree, content, response) {
-	//window.alerts.alert("Save Failed!", "Your updates have not been saved.", "danger");
 	return {
 		type: reducer,
 		tree: tree,
