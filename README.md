@@ -43,17 +43,14 @@ I'm from the trenches. I build relatively simple websites for small businesses, 
 React  
 Redux  
 React-Redux  
-Redux-Thunk
 
 Proper Setup Example.
 ```
-import { createStore, applyMiddleware } from 'redux';
-import thunk from 'redux-thunk';
+import { createStore, combineReducers} from 'redux';
 import rootReducer from './reducers/index';
-const createStoreWithMiddleware = applyMiddleware(
-  thunk
-)(createStore);
-const store = createStoreWithMiddleware(rootReducer);
+const store = createStore(
+	combineReducers(rootReducer)
+);
 ReactDOM.render(
   <Provider store={store}>
     <MyRootComponent />
@@ -61,12 +58,17 @@ ReactDOM.render(
   rootEl
 )
 ```
-*-redux-thunk and react-redux documentation*
-
-We also have to setup the address for backend ajax queries, so we'll add this:
+*Although the two-way-rest plugin does not need the combineReducers function from redux, it does require the same state reducer format:*
 ```
-import {setAddress} from 'two-way-rest';
+fullState = {reducerName_1: reducerState_1, ...}
+```
+
+
+We also have to setup the address for backend ajax queries, and send it the store so we'll add this:
+```
+import {setAddress, setStore} from 'two-way-rest';
 setAddress('http://remoteurl.com');
+setStore(store);
 ```
 #### Once the initial setup is complete, we’re free to do a little more setup…
 
@@ -89,12 +91,6 @@ export default combineSwitches([normalReducerSwitch, twoWayRestSwitch]);
 ```
 We need to make certain the state is an immutable map object, so the twoWayRestSwitch should always be last. The immutable library is an integral component of two-way-rest. 
 
-### State Format
-
-Although the two-way-rest plugin does not need the combineReducers function from redux, it does require the same state reducer format:
-```
-fullState = {reducerName_1: reducerState_1, ...}
-```
 
 # Inner Workings
 ### Frontend Relational Immutable Database

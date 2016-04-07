@@ -1045,16 +1045,11 @@ Now your frontend user has a new property(or updates an old property) called vis
 <h5 id="requirements"><a name="user-content-requirements" href="#requirements" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Requirements:</h5>
 <p>React<br />
 Redux<br />
-React-Redux<br />
-Redux-Thunk</p>
+React-Redux  </p>
 <p>Proper Setup Example.<br />
-<pre><code>import { createStore, applyMiddleware } from 'redux';
-import thunk from 'redux-thunk';
+<pre><code>import { createStore } from 'redux';
 import rootReducer from './reducers/index';
-const createStoreWithMiddleware = applyMiddleware(
-  thunk
-)(createStore);
-const store = createStoreWithMiddleware(rootReducer);
+const store = createStore(rootReducer);
 ReactDOM.render(
   &lt;Provider store={store}&gt;
     &lt;MyRootComponent /&gt;
@@ -1062,10 +1057,13 @@ ReactDOM.render(
   rootEl
 )
 </code></pre><br />
-<em>-redux-thunk and react-redux documentation</em></p>
-<p>We also have to setup the address for backend ajax queries, so we&rsquo;ll add this:<br />
-<pre><code>import {setAddress} from 'two-way-rest';
+<em>Although the two-way-rest plugin does not need the combineReducers function from redux, it does require the same state reducer format:</em><br />
+<pre><code>fullState = {reducerName_1: reducerState_1, ...}
+</code></pre></p>
+<p>We also have to setup the address for backend ajax queries, and send it the store so we&rsquo;ll add this:<br />
+<pre><code>import {setAddress, setStore} from 'two-way-rest';
 setAddress('http://remoteurl.com');
+setStore(store);
 </code></pre></p>
 <h4 id="once-the-initial-setup-is-complete-were-free-to-do-a-little-more-setup"><a name="user-content-once-the-initial-setup-is-complete-were-free-to-do-a-little-more-setup" href="#once-the-initial-setup-is-complete-were-free-to-do-a-little-more-setup" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Once the initial setup is complete, we’re free to do a little more setup…</h4>
 <p>In order for these special forms to work, we need to create a parent component to hold them.<br />
@@ -1082,10 +1080,46 @@ export default combineSwitches([normalReducerSwitch, twoWayRestSwitch]);
 
 </code></pre><br />
 We need to make certain the state is an immutable map object, so the twoWayRestSwitch should always be last. The immutable library is an integral component of two-way-rest. </p>
-<h3 id="state-format"><a name="user-content-state-format" href="#state-format" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>State Format</h3>
-<p>Although the two-way-rest plugin does not need the combineReducers function from redux, it does require the same state reducer format:<br />
-<pre><code>fullState = {reducerName_1: reducerState_1, ...}
-</code></pre></p>
+<h1 id="inner-workings"><a name="user-content-inner-workings" href="#inner-workings" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Inner Workings</h1>
+<h3 id="frontend-relational-immutable-database"><a name="user-content-frontend-relational-immutable-database" href="#frontend-relational-immutable-database" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Frontend Relational Immutable Database</h3>
+<p>Two-way-rest is powered by a frontend pseudo-relational database called globe. Every reducer&rsquo;s state is a globe, and changes to the globe are generally made by passing it either an object, or an array of objects.</p>
+<h3 id="substate"><a name="user-content-substate" href="#substate" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Substate</h3>
+<p>Every globe has a Substate property which holds the intermittent state of an instance before it is either created, updated, or destroyed.</p>
+<h3 id="components"><a name="user-content-components" href="#components" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Components</h3>
+<p>There are two types of two-way-rest components: Getters and Posters. Getters retrieve instances, and Posters mutate instances. Getters include index and show components, and Posters are creates, update, and destroy. Every component sends an instance of itself to the props.instance(s) of its children, however while Getters send the actual instance, Posters send a substate instance if it exists. (Substate instances are created on errors or successes )</p>
+<h3 id="rest-expectations"><a name="user-content-rest-expectations" href="#rest-expectations" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>REST Expectations</h3>
+<p>Index: Returns an array<br />
+Everything else: Returns an object<br />
+Errors: Object with an errors property</p>
+<h3 id="component-actioncycle"><a name="user-content-component-actioncycle" href="#component-actioncycle" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Component Actioncycle</h3>
+<p>All two-way-rest components have the same actioncycle that can be tapped into by declaring function using the prop of the appropriate name</p>
+<p>callforward&ndash;&gt;<br />
+defaultAction&ndash;&gt;<br />
+onSuccessCB || onFailureCB&ndash;&gt;<br />
+callback</p>
+<p>These functions are wrapped in bluebird&rsquo;s Promise.Method, so they accept promises. </p>
+<p>They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. </p>
+<p>The args Map:<br />
+reducer: <string> name of reducer<br />
+tree: <List:Immutable> frontend/backend location of instance<br />
+outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)<br />
+path: <string> url starting from <a href="http://remoteurl.com/">http://remoteurl.com/</a>&hellip; (defaults to tree) + this.props.endPath <string> rest action like &lsquo;edit&rsquo;, &lsquo;show&rsquo;, etc.<br />
+form: <DOM:element> the entire component element<br />
+content: <Map:Immutable> this.props.content object<br />
+callforward: <function><br />
+callback: <function><br />
+onSuccessCB: <function><br />
+onFailureCB: <function><br />
+onSuccess: <object> passed to instance on success<br />
+onFailure: <object> passed to instance on failure<br />
+upload: <boolean> is one of the fields in the component a file field<br />
+force: <boolean> should a component refire its standard ajax call everytime it is updated<br />
+parent: <boolean> true for CreateChildComponents<br />
+id: <string> declared using this.props.id, forces a create component to use the declared id<br />
+twr: <Component> the component itself<br />
+response: <object | array> declared using this.props.response, skips ajax call and returns response<br />
+dispatch: <function> disptach function<br />
+getState: <getState> getState function</p>
 <h1 id="usage"><a name="user-content-usage" href="#usage" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Usage</h1>
 <p><em>For a working example, please checkout the two-way-rest-boilerplate</em></p>
 <h1 id="component-properties"><a name="user-content-component-properties" href="#component-properties" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Component Properties</h1>
@@ -1102,25 +1136,67 @@ example_1: <br />
 <p>example_2: <br />
 <pre><code>['users'] (used for create/index of a specific instance)  
 == 'http://remoteurl/users' (backend) 
-== reducerState.immutable = {users: {...the results of a create or an index} (frontend)
+== reducerState.immutable = {users: {...the results of a create/index} (frontend)
 </code></pre></p>
 <p><strong>location</strong><br />
 type: string url<br />
 purpose: parsed to find the tree of an instance<br />
 example_1: <br />
 <pre><code>&lt;TWRShow location='/admin/users/1/edit' &gt; ==&gt; tree = ['users', '1'] 
-(Starts parse at reducer name if reducer name is in url, removes rest words like index, edit, and create from the end of a url)
+(Starts parse at reducer name if reducer name is in url, 
+removes rest words like index, edit, and create from the end of a url)
 </code></pre></p>
 <p><strong>instance</strong><br />
 type: immutable object with tree and _globeTWR property<br />
 purpose: the frontend representation of a backend object<br />
 example_1: <br />
-<pre><code>&lt;TWRShow tree={['users', '1']}&gt; ==&gt; sends its children an instance prop of the get response to http://remoteUrl/users/1
-&lt;TWRUpdate instance={ this.props.instance} /&gt; ==&gt; uses the instance prop's tree set the tree of the component 
+<pre><code>&lt;TWRShow tree={['users', '1']}&gt; ==&gt; sends its children an 
+    instance prop of the get response to http://remoteUrl/users/1
+&lt;TWRUpdate instance={ this.props.instance} /&gt; ==&gt; uses the 
+    instance prop's tree set the tree of the component 
 </code></pre><br />
 example_2:<br />
 <pre><code>this.props.instance.gex('children') ==&gt; an array of child instances
 </code></pre></p>
 <p>example_3:<br />
 <pre><code>this.props.instance.gex('child') ==&gt; a child instance
+</code></pre></p>
+<p><strong>outTree</strong><br />
+type: Array<br />
+purpose: change the frontend location of where the results should be merged with.<br />
+example_1: <br />
+<pre><code>&lt;TWRShow tree={['users', '1']} outTree={{'users', '2'}}&gt; ==&gt; Get the user 1 backend
+instance and replace the user 2 frontend instance with it
+</code></pre></p>
+<p><strong>replace</strong><br />
+type: Function<br />
+purpose: replace the component&rsquo;s DOM with a new DOM that has access to all of the component&rsquo;s functions<br />
+example_1: <br />
+<pre><code>&lt;TWRShow tree={['users', '1']} replace={(user_1)=&gt;{
+    console.log(user_1.instance(), 'returns the frontend instance')
+    return &lt;p&gt;{user_1.instance().get('name')}&lt;/p&gt;
+}}
+</code></pre></p>
+<p><strong>custom</strong><br />
+type: Function<br />
+purpose: return a custom reducer function that takes the reducer state as an argument and returns a new reducer state<br />
+example_1: <br />
+<pre><code>&lt;TWRShow tree={['users', '1']} replace={(user_1)=&gt;{
+    return &lt;TWRCreate onClick={()=&gt;{
+        user_1.custom((state)=&gt;state.set('name', 'Example'))
+    }} /&gt; 
+}} /&gt;==&gt; 
+</code></pre></p>
+<p><strong>customAction</strong><br />
+type: Function<br />
+purpose: an action creator for custom functions<br />
+example_1: <br />
+<pre><code>&lt;TWRUpdate tree={['users', '1']} callforward={(args)=&gt;{
+    args.get('dispatch')(
+        args.get('twr').customAction(
+            (state)=&gt;state.set('name', 'Example')
+    ))
+    return args
+
+}} /&gt;
 </code></pre></p></article></body></html>
