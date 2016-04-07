@@ -8,30 +8,38 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+exports.custom = custom;
 exports.createTree = createTree;
 exports.checkTWREntries = checkTWREntries;
 exports.orderedMap = orderedMap;
 exports.idArray = idArray;
 exports.createMapObject = createMapObject;
+exports.wrapMapState = wrapMapState;
 exports.mapState = mapState;
 exports.addToGLobe = addToGLobe;
+exports.treeObject = treeObject;
+exports.createInitialGlobe = createInitialGlobe;
+exports.createNextGlobe = createNextGlobe;
 exports.addTreeToObject = addTreeToObject;
 exports.setGet = setGet;
-exports.setShow = setShow;
 exports.index = index;
 exports.show = show;
 exports.substateCreate = substateCreate;
 exports.substateDelete = substateDelete;
+exports.createCleanCloneElement = createCleanCloneElement;
 exports.cleanSubstate = cleanSubstate;
 exports.create = create;
 exports.update = update;
 exports.destroy = destroy;
 exports.createError = createError;
-exports.updateFront = updateFront;
 
 var _immutable = require('immutable');
 
 var _componentHelpers = require('./componentHelpers');
+
+function custom(state, fn) {
+	return fn(state);
+}
 
 function createTree(k) {
 	if (Array.isArray(k)) {
@@ -41,38 +49,61 @@ function createTree(k) {
 }
 
 function checkTWREntries(_globe, _firstInstance, _tree) {
-
-	var _lastInstance = _tree.reduce(function (_previousInstance, _entry, _index, array) {
-		var _instanceTWR = _previousInstance.get(_entry + 'TWR');
-		if (_instanceTWR) {
-			if (_immutable.List.isList(_instanceTWR)) {
-				var _orderedMap = _instanceTWR.reduce(function (orderedMap, id) {
-					var _globeInstance = _globe.getIn([_entry.toString(), id.toString()]);
-					if (_globeInstance) {
-						return orderedMap.set(id.toString(), _globeInstance);
+	var startTime = new Date().getTime();
+	try {
+		var _lastInstance = _tree.reduce(function (_previousInstance, _entry, _index, array) {
+			if (_previousInstance) {
+				var _instanceTWR = _previousInstance.get(_entry + 'TWR');
+				if (_instanceTWR) {
+					if (_immutable.List.isList(_instanceTWR)) {
+						var _orderedMap = _instanceTWR.reduce(function (orderedMap, id) {
+							var _globeInstance = _globe.getIn([_entry.toString(), id.toString()]);
+							if (_globeInstance && !_globeInstance.get('deleted_at')) {
+								return orderedMap.set(id.toString(), _globeInstance.set('_globeTWR', _globe));
+							}
+							return orderedMap;
+						}, (0, _immutable.OrderedMap)());
+						return _orderedMap;
 					}
-					return orderedMap;
-				}, (0, _immutable.OrderedMap)());
-				return _orderedMap;
+					var _globeInstance = _globe.getIn([_entry.pluralize.toString(), _instanceTWR.toString()]);
+					if (_globeInstance) {
+						return _globeInstance.set('_globeTWR', _globe);
+					}
+					return undefined;
+				}
+				return _previousInstance.get(_entry.toString());
 			}
-			return _globe.getIn([_entry.pluralize.toString(), _instanceTWR.toString()]);
-		}
-		return _previousInstance.get(_entry.toString());
-	}, _firstInstance);
-	if (_immutable.Map.isMap(_lastInstance) || _immutable.OrderedMap.isOrderedMap(_lastInstance)) {
-		return _lastInstance.set('_globeTWR', _globe);
+			return _previousInstance;
+		}, _firstInstance);
+		return _lastInstance;
+	} catch (e) {
+		console.log('Error in checkTWREntries', e);
 	}
-	return _lastInstance;
 }
 
 _immutable.Map.prototype.gex = function (k, notSetValue) {
-	var _root = this._root;
-	var _globe = _root.get(0, undefined, '_globeTWR', notSetValue);
-	var _tree = createTree(k);
-	if (_globe) {
-		return checkTWREntries(_globe, this, _tree);
+	try {
+		var _globe = this.get('_globeTWR');
+		var _tree = createTree(k);
+		if (_globe) {
+			return checkTWREntries(_globe, this, _tree);
+		}
+		var _firstInstance = this.get(_tree.first());
+		if (_firstInstance && _firstInstance.get) {
+			var _foundGlobe = _firstInstance.get('_globeTWR');
+			if (_foundGlobe) {
+				return checkTWREntries(_foundGlobe, this, _tree);
+			}
+		}
+		if (this.getIn(k)) {
+			return this.getIn(k);
+		}
+
+		throw '_globeTWR must be defined';
+	} catch (e) {
+		console.log('Error in Gex', e);
+		throw e;
 	}
-	throw '_globeTWR must be defined';
 };
 
 function orderedMap(children) {
@@ -92,7 +123,7 @@ function createMapObject(k, js, tree) {
 	try {
 		if (k == 'tree') {
 			return (0, _immutable.Map)({
-				tree: true,
+				isTree: true,
 				thisTree: tree.push(k),
 				thisObject: js
 			});
@@ -104,19 +135,22 @@ function createMapObject(k, js, tree) {
 						return (0, _immutable.Map)({
 							thisTree: tree.push(k + 'TWR'),
 							nextTree: (0, _immutable.List)([k]),
-							deleteTree: tree.push(k),
 							nextObject: orderedMap(js),
 							thisObject: idArray(js)
 						});
 					}
 				}
+				return (0, _immutable.Map)({
+					thisTree: tree.push(k),
+					thisObject: (0, _immutable.List)(js),
+					nextObject: false
+				});
 			}
 			if (js.id) {
 				if (k != js.id) {
 					return (0, _immutable.Map)({
 						thisTree: tree.push(k + 'TWR'),
 						nextTree: (0, _immutable.List)([k.pluralize]),
-						deleteTree: tree.push(k),
 						nextObject: orderedMap([js]),
 						thisObject: js.id.toString()
 					});
@@ -135,6 +169,17 @@ function createMapObject(k, js, tree) {
 		console.log('mapOBJECT k', k);
 	}
 }
+
+function wrapMapState(js, tree) {
+	var globe = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
+
+	var startTime = new Date().getTime();
+
+	var nextState = mapState(js.toJS ? js.toJS() : js, tree, (0, _immutable.Map)().asMutable());
+	console.log('mapStateTime', new Date().getTime() - startTime);
+	return globe.mergeDeep(nextState.asImmutable());
+}
+
 function mapState(js, tree) {
 	var globe = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
 
@@ -152,13 +197,16 @@ function mapState(js, tree) {
 		return addToGLobe(js, tree, globe);
 	}
 	try {
+		if (_immutable.List.isList(js)) {
+			return addToGLobe(js, tree, globe);
+		}
 		if (_immutable.Map.isMap(js)) {
 			return addToGLobe(js.merge({ tree: tree }), tree, globe);
 		}
 		return addToGLobe((0, _immutable.Map)(js).merge({ tree: tree }), tree, globe);
 	} catch (e) {
 		console.log('in error');
-		console.log('js', js);
+		console.log('js', js, js.toJS ? js.toJS() : 'not immutable');
 		console.log('tree', tree.toJS());
 		console.log(e);
 		throw e;
@@ -167,7 +215,6 @@ function mapState(js, tree) {
 
 function addToGLobe(js, tree, globe) {
 	try {
-
 		return (0, _immutable.Seq)(js).toKeyedSeq().mapEntries(function (_ref) {
 			var _ref2 = _slicedToArray(_ref, 2);
 
@@ -176,29 +223,63 @@ function addToGLobe(js, tree, globe) {
 
 			return [k, createMapObject(k, v, tree)];
 		}).reduce(function (globes, mapObject) {
-			try {
-				if (mapObject.get('tree')) {
-					if (mapObject.get('thisTree').size > 2) {
-						var objectToAddTree = globes.getIn(mapObject.get('thisTree').pop());
-						if (objectToAddTree && objectToAddTree.get('id')) {
-							return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
-						}
+			if (globes && !mapObject.get('skip')) {
+				try {
+					if (mapObject.get('isTree')) {
+						return treeObject(mapObject, globes);
 					}
-					return globes;
+					var initialGlobe = createInitialGlobe(globes, mapObject);
+					return createNextGlobe(initialGlobe, mapObject);
+				} catch (e) {
+					console.log('error in reduce addToGLobe', e, e.lineNumber);
 				}
-				var random = Math.floor(Math.random() * 100 + 1);
-				var initialGlobe = globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
-				if (mapObject.get('thisObject')) {
-					var nextGlobe = addTreeToObject(mapObject, initialGlobe);
-					return nextGlobe.mergeDeep(mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), globes));
-				}
-				return initialGlobe;
-			} catch (e) {
-				console.log('error in addToGLobe', e, e.lineNumber);
 			}
+			return globes;
 		}, globe);
 	} catch (e) {
-		console.log('addToGLobeFull', e);
+		console.log('addToGLobe error', e);
+	}
+}
+
+function treeObject(mapObject, globes) {
+	try {
+		if (mapObject.get('thisTree').size > 2) {
+			var objectToAddTree = globes.getIn(mapObject.get('thisTree').pop());
+			if (objectToAddTree && objectToAddTree.get && objectToAddTree.get('id')) {
+				return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
+			}
+		}
+		return globes;
+	} catch (e) {
+		console.log('treeObject error', e, mapObject.toJS());
+	}
+}
+
+function createInitialGlobe(globes, mapObject) {
+	try {
+		if ((0, _immutable.is)(globes.getIn(mapObject.get('thisTree')), mapObject.get('thisObject'))) {
+			return globes;
+		}
+
+		return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));
+	} catch (e) {
+		console.log('create initialGlobe error', e, mapObject.toJS(), globes.toJS(), globes.getIn(mapObject.get('thisTree')));
+	}
+}
+function createNextGlobe(initialGlobe, mapObject) {
+	try {
+		// && (!is(mapObject.get('thisTree'), mapObject.get('nextTree')) || !is(mapObject.get('thisObject'), mapObject.get('nextObject')) )  
+		if (mapObject.get('nextObject')) {
+			if (mapObject.get('thisObject')) {
+				var nextGlobe = addTreeToObject(mapObject, initialGlobe);
+				if (nextGlobe) {
+					return nextGlobe.mergeDeep(mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), initialGlobe));
+				}
+			}
+		}
+		return initialGlobe;
+	} catch (e) {
+		console.log('Create Next Globe Error', e, mapObject.toJS());
 	}
 }
 
@@ -222,124 +303,72 @@ function addTreeToObject(mapObject, globes) {
 	}
 }
 
-/*
-export function transformResponse(js, tree){
-	if(typeof js !== 'object' || js === null){
-		return js;
-	}else{
-		if(Array.isArray(js)){
-			return convertArrayToOrderedMap(js, transformResponse, tree);
-		}else{
-			return transformObject(js, tree);
-		}
-	}
-}
-
-export function transformObject(js, tree){
-	if(js.id){
-		const newTree = List(tree).push(js.id.toString());
-		return Seq(js).mapEntries(([k, v]) => {
-			return [k, transformResponse(v, newTree.push(k))]
-		}).toMap().merge({tree: newTree});
-	}else{
-		return Map(js);
-	}
-}
-
-export function convertArrayToOrderedMap(array, fn, tree){
-	return Seq(array).toKeyedSeq().mapEntries(([k, v]) =>
-	 {
-	 	if(v.id){
-	 		return [v.id.toString(), fn(v, tree)]	
-	 	}else{
-	 		return [v, fn(v, tree)]	
-	 	}
-	 }).toOrderedMap();
-}
-
-
-export function fromJSOrdered(js) {
-	return typeof js !== 'object' || js === null ? js : 
-	Array.isArray(js) ? convertArrayToOrderedMap(js, fromJSOrdered): 
-	Seq(js).map(fromJSOrdered).toMap();
-}
-
-
-export function setMaps(state, tree){
-	const stateTree = tree.reduce((stateTree, tree)=>{
-		const trees = stateTree.get('trees').push(tree);
-		const state = stateTree.get('state');		
-		const newState = checkTreeExists(state, trees, tree)
-		return Map({
-			  state: newState
-			, trees
-		})
-		
-	}, 
-	Map({
-		  state
-		, trees: List()
-		})
-	);
-	return stateTree.get('state');
-}
-
-export function checkTreeExists(state, trees, tree){
-	if(state.hasIn(trees)){
-			return state
-	}else{
-		if(isNaN(tree)){
-			return state.setIn(trees, OrderedMap());
-		}else{
-			return state.setIn(trees, Map());
-		}
-	}
-}
-*/
-
 function setGet(state, tree) {
-	return mapState(true, tree, state);
-}
-
-function setShow(state, tree) {
-	var ListTree = (0, _immutable.List)(tree);
-	return setMaps(state, ListTree).setIn((0, _componentHelpers.checkShow)(ListTree), true);
+	return wrapMapState(true, tree, state);
 }
 
 function index(state, tree, response) {
-	return mapState(response, tree, state);
+	return wrapMapState(response, tree, state);
 }
 
 function show(state, tree, response) {
-	return mapState(response, tree, state);
+	try {
+		return wrapMapState(response, tree, state);
+	} catch (e) {
+		console.log('show error', e);
+	}
 }
 
-function substateCreate(state, tree) {
+function substateCreate() {
+	var state = arguments.length <= 0 || arguments[0] === undefined ? (0, _immutable.Map)() : arguments[0];
+	var tree = arguments[1];
 	var content = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
 
-	return state.set('Substate', mapState((0, _immutable.Map)(content), tree, state.get('Substate')));
+	return state.set('Substate', wrapMapState((0, _immutable.Map)(content), tree, state.get('Substate')));
 }
 
-function substateDelete(state, tree, content) {
-	var ListTreeWithId = tree;
-	return setMaps(state, ListTreeWithId).deleteIn(ListTreeWithId);
+function substateDelete() {
+	var state = arguments.length <= 0 || arguments[0] === undefined ? (0, _immutable.Map)() : arguments[0];
+	var tree = arguments[1];
+	var content = arguments[2];
+
+	var Substate = state.get('Substate').deleteIn(tree);
+	return state.set('Substate', Substate);
 }
 
-function cleanSubstate(state, tree) {
-	var cloneElement = state.getIn(tree);
-	var cleanCloneElement = cloneElement.toSeq().mapEntries(function (_ref3) {
-		var _ref4 = _slicedToArray(_ref3, 2);
+function createCleanCloneElement(cloneElement) {
+	if (cloneElement) {
+		return cloneElement.toSeq().mapEntries(function (_ref3) {
+			var _ref4 = _slicedToArray(_ref3, 2);
 
-		var k = _ref4[0];
-		var v = _ref4[1];
+			var k = _ref4[0];
+			var v = _ref4[1];
 
-		if (k == 'tree' || k == 'id') {
-			return [k, v];
-		} else {
-			return [k, ''];
+			if (k == 'tree' || k == 'id') {
+				return [k, v];
+			} else {
+				return [k, ''];
+			}
+		}).toMap();
+	}
+	return (0, _immutable.Map)();
+}
+
+function cleanSubstate() {
+	var state = arguments.length <= 0 || arguments[0] === undefined ? (0, _immutable.Map)() : arguments[0];
+	var tree = arguments[1];
+	var lastCreatedId = arguments[2];
+
+	try {
+		var cloneElement = state.getIn(tree);
+		var cleanCloneElement = createCleanCloneElement(cloneElement);
+		if (lastCreatedId) {
+			return state.setIn(tree, cleanCloneElement.set('lastCreatedId', lastCreatedId));
 		}
-	}).toMap();
-	return state.setIn(tree, cleanCloneElement);
+		return state.setIn(tree, cleanCloneElement);
+	} catch (e) {
+		console.log('error in clean substate', e);
+	}
 }
 
 function create(state, tree) {
@@ -348,32 +377,34 @@ function create(state, tree) {
 	var outTree = arguments[4];
 	var parent = arguments[5];
 
-
-	var precleanedSubstate = state.get('Substate');
-	var Substate = cleanSubstate(precleanedSubstate, tree);
-	var liveGlobe = state.set('Substate', Substate);
-	var nextState = mapState(content.merge((0, _immutable.Map)(response)), outTree, liveGlobe);
-	if (parent) {
-		var _ret = function () {
-			var childName = tree.first() + 'TWR';
-			var childId = outTree.last().toString();
-			console.log('parent', parent.toJS(), state.toJS());
-			var parentRelations = nextState.getIn(parent).get(childName);
-			if (parentRelations) {
+	try {
+		var precleanedSubstate = state.get('Substate');
+		var Substate = cleanSubstate(precleanedSubstate, tree, response.id ? response.id : false);
+		var liveGlobe = state.set('Substate', Substate);
+		var nextState = wrapMapState(content.merge((0, _immutable.Map)(response)), outTree, liveGlobe);
+		if (parent) {
+			var _ret = function () {
+				var childName = tree.first() + 'TWR';
+				var childId = outTree.last().toString();
+				var parentRelations = nextState.getIn(parent).get(childName);
+				if (parentRelations) {
+					return {
+						v: nextState.updateIn(parent.push(childName), function (children) {
+							return children.push(childId);
+						})
+					};
+				}
 				return {
-					v: nextState.updateIn(parent.push(childName), function (children) {
-						return children.push(childId);
-					})
+					v: nextState.setIn(parent.push(childName), (0, _immutable.List)([childId]))
 				};
-			}
-			return {
-				v: nextState.setIn(parent.push(childName), (0, _immutable.List)([childId]))
-			};
-		}();
+			}();
 
-		if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+			if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+		}
+		return nextState;
+	} catch (e) {
+		console.log('CORE CREATE ERROR', e);
 	}
-	return nextState;
 }
 
 function update(state, tree) {
@@ -384,11 +415,10 @@ function update(state, tree) {
 	var precleanedSubstate = state.get('Substate');
 	var Substate = cleanSubstate(precleanedSubstate, tree);
 	var liveGlobe = state.set('Substate', Substate);
-	return mapState(content.merge(response), outTree, liveGlobe);
+	return wrapMapState(content.merge(response), outTree, liveGlobe);
 }
 
 function destroy(state, tree, outTree) {
-	console.log('outTree', outTree.toJS());
 	var precleanedSubstate = state.get('Substate');
 	var Substate = cleanSubstate(precleanedSubstate, tree);
 	return state.deleteIn(outTree).set('Substate', Substate);
@@ -400,12 +430,5 @@ function createError(state, tree) {
 
 	var Substate = state.get('Substate');
 	var mergedContent = content.merge(response);
-	return state.set('Substate', mapState(mergedContent, tree, Substate));
-}
-
-function updateFront(state, tree, content) {
-	var response = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
-
-	var ListTree = tree;
-	return setMaps(state, ListTree).mergeDeepIn(ListTree, (0, _immutable.Map)(content).merge(response));
+	return state.set('Substate', wrapMapState(mergedContent, tree, Substate));
 }

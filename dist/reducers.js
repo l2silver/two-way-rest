@@ -58,6 +58,8 @@ function generateRestSwitch(reducer) {
 						return (0, _core.destroy)(state, action.tree, action.outTree);
 					case 'DESTROY_ERROR':
 						return (0, _core.destroy)(state, action.tree);
+					case 'CUSTOM':
+						return (0, _core.custom)(state, action.fn);
 				}
 		}
 		return state;

@@ -16,6 +16,7 @@ exports.destroyAction = destroyAction;
 exports.indexSetAction = indexSetAction;
 exports.setAction = setAction;
 exports.showSetAction = showSetAction;
+exports.custom = custom;
 function showAction(reducer, tree, response) {
 	return {
 		type: reducer,
@@ -68,6 +69,9 @@ function createErrorAction(reducer, tree, content, response) {
 }
 
 function updateAction(reducer, tree, content, response, outTree) {
+	//window.alerts.alert("Save Successful!", "Your updates have been saved.", "success");
+	//console.log("TESTING TWR tree", tree);
+	//console.log("TESTING TWR outtree", response);
 	return {
 		type: reducer,
 		tree: tree,
@@ -79,6 +83,7 @@ function updateAction(reducer, tree, content, response, outTree) {
 }
 
 function updateErrorAction(reducer, tree, content, response) {
+	//window.alerts.alert("Save Failed!", "Your updates have not been saved.", "danger");
 	return {
 		type: reducer,
 		tree: tree,
@@ -136,5 +141,13 @@ function showSetAction(reducer, tree) {
 		type: reducer,
 		tree: tree,
 		verb: 'SET_SHOW'
+	};
+}
+
+function custom(reducer, fn) {
+	return {
+		type: reducer,
+		fn: fn,
+		verb: 'CUSTOM'
 	};
 }

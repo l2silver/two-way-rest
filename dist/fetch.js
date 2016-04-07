@@ -39,6 +39,7 @@ function setAddress(url) {
 
         if (body) {
           return request['del'](url + path).send(body).withCredentials().then(function (res) {
+            console.log('res delete', res);
             if (res.statusCode == 200) {
               return res.body;
             }
@@ -46,6 +47,7 @@ function setAddress(url) {
           });
         } else {
           return request['del'](url + path).withCredentials().then(function (res) {
+            console.log('res delete', res);
             if (res.statusCode == 200) {
               return res.body;
             }
@@ -83,4 +85,5 @@ function setAddress(url) {
       throw res;
     });
   };
+  exports['productionUrl'] = url;
 }
