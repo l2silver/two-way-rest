@@ -33,7 +33,7 @@ describe('mirrorRestReducers', ()=>{
 						1: Map({
 							name: 'example'
 							, id: 1
-						}).merge({tree})
+						})
 					})
 				
 			})

@@ -36,7 +36,7 @@ function triggerSubmit(form) {
 }
 
 function createId() {
-	return Math.random().toString().slice(3);
+	return new Date().getTime() + '' + Math.random().toString().slice(3);
 }
 function reverseTree(tree, changeLast) {
 	var mapTree = tree.reverse().reduce(function (object, branch) {
