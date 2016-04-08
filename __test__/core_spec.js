@@ -83,12 +83,11 @@ describe('core', ()=>{
 				})
 			})	
 			const nextState = create(state, tree, content, response, List(['users', '2']));
-			console.log("What up")
 			expect(nextState).to.equal(
 				Map({
 					Substate: Map({
 						users: OrderedMap({
-							12345: Map({looks: '', id: '12345'}).merge({tree})
+							12345: Map({looks: '', id: '12345'}).merge({tree}).set('lastCreatedId', 2)
 						})
 					}),
 					
@@ -120,7 +119,7 @@ describe('core', ()=>{
 				Map({
 					Substate: Map({
 						users: OrderedMap({
-							12345: Map({looks: '', id: '12345'}).merge({tree})
+							12345: Map({looks: '', id: '12345'}).merge({tree}).set('lastCreatedId', 2)
 						})
 					}),
 					parents: OrderedMap({
@@ -154,7 +153,7 @@ describe('core', ()=>{
 			const expectedState = Map({
 					Substate: Map({
 						users: OrderedMap({
-							12345: Map({looks: '', id: '12345'}).merge({tree})
+							12345: Map({looks: '', id: '12345'}).merge({tree}).set('lastCreatedId', 2)
 						})
 					}),
 					users: Map({
@@ -172,8 +171,6 @@ describe('core', ()=>{
 
 					})
 				});
-			//console.log(nextState);
-			//console.log(expectedState);
 			expect(is(nextState,expectedState)).to.be.true;
 		});
 		it('success parent relations exist', ()=>{
@@ -196,7 +193,7 @@ describe('core', ()=>{
 				Map({
 					Substate: Map({
 						users: OrderedMap({
-							12345: Map({looks: '', id: '12345'}).merge({tree})
+							12345: Map({looks: '', id: '12345'}).merge({tree}).set('lastCreatedId', 2)
 						})
 					}),
 					parents: OrderedMap({
@@ -429,7 +426,7 @@ describe('core', ()=>{
 			expect(mapState(initialObject, List(['tests', '1']), Map())).to.equal(globe);	
 		});
 
-		it('deep relations', ()=>{
+		it.only('deep relations', ()=>{
 			const faker_tests = [{id: 1}];
 			const fake_tests = [
 					{
@@ -455,7 +452,7 @@ describe('core', ()=>{
 					1: Map({
 						id: 1
 						, faker_tests
-						, attributes: Map({eyes: 'blue'})
+						, attributes: {eyes: 'blue'}
 						, faker_testsTWR: List(['1'])
 						,  tree: List(['fake_tests', '1'])
 

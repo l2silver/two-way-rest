@@ -3,9 +3,12 @@ import React from 'react';
 import reactDom, {findDOMNode} from 'react-dom';
 import {expect} from 'chai';
 import {fromJS, Map, OrderedMap, List, Seq} from 'immutable';
+import {setStore} from './../lib/componentProperties'
 import {DeclareReducer, StupidTWRLink, StupidTWRIndex} from './../lib/components'
 import {renderIntoDocument, scryRenderedDOMComponentsWithTag, findRenderedDOMComponentWithClass, createRenderer, shallowRenderer} from 'react-addons-test-utils';
 import sd from 'skin-deep';
+
+setStore({dispatch: ()=>{}, getState: ()=>{}})
 describe('components', ()=>{
 	const instance = Map({
 			tree: List(['tests', '1'])
@@ -63,7 +66,7 @@ describe('components', ()=>{
 		      	}, { reducer: "test" });
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
-		  		expect(ins.page()).to.equal(state.test);
+		  		expect(ins.page().delete('_globeTWR')).to.equal(state.test);
 			});
 			it('instance', ()=>{
 				const tree = sd.shallowRender(function() {
@@ -71,7 +74,7 @@ describe('components', ()=>{
 		      	}, { reducer: "test" });
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
-		  		expect(ins.instance().delete('_globeTWR')).to.equal(state.test.get('tests'));
+		  		expect(ins.instance().delete('_globeTWR').deleteIn(['1', '_globeTWR'])).to.equal(state.test.get('tests'));
 			});
 			describe('get', ()=>{
 				function index(args){
@@ -91,7 +94,7 @@ describe('components', ()=>{
 					}
 					const renderedComponent = renderIntoDocument(
 					  <DeclareReducer reducer='test'>
-					  	<StupidTWRIndex tree={['tests']} state={state} index={index}></StupidTWRIndex>
+					  	<StupidTWRIndex tree={['tests']} state={state}></StupidTWRIndex>
 					  </DeclareReducer>
 					);
 				});

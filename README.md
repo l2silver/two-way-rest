@@ -64,7 +64,7 @@ fullState = {reducerName_1: reducerState_1, ...}
 ```
 
 
-We also have to setup the address for backend ajax queries, and send it the store so we'll add this:
+We also have to setup the address for backend ajax queries and send it the store so we'll add this:
 ```
 import {setAddress, setStore} from 'two-way-rest';
 setAddress('http://remoteurl.com');
@@ -115,9 +115,7 @@ defaultAction-->
 onSuccessCB || onFailureCB-->
 callback
 
-These functions are wrapped in bluebird's Promise.Method, so they accept promises. 
-
-They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. 
+These functions are wrapped in bluebird's Promise.Method, so they accept promises. They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. 
 
 The args Map:
 reducer: <string> name of reducer
@@ -144,6 +142,7 @@ getState: <getState> getState function
 
 # Usage
 *For a working example, please checkout the two-way-rest-boilerplate*
+http://github.com/l2silver/two-way-rest-boilerplate
 
 # Component Properties
 ```
@@ -242,4 +241,34 @@ example_1:
 	return args
 	
 }} />
+
+__forceRender__
+type: boolean
+purpose: by default, the index and show components will only render the children if their instances exist. When forceRender is true, those components will render their children no matter what.
+example_1: 
 ```
+<TWRShow forceRender='true' tree={['users', '1']} >
+	<p>I show no matter what! </p>
+</TWRShow>
+```
+
+__force__
+type: boolean
+purpose: the index and show components will only fire a network request once per instance in the same reducer state. To fire everytime a component is mounted, set force to true.
+example_1: 
+```
+<TWRShow force='true' tree={['users', '1']} >
+	<p>A new network request everytime the component is mounted</p>
+</TWRShow>
+```
+
+__tag__
+type: string
+purpose: change the element wrapping a TWR component to specific tag
+example_1: 
+```
+<TWRShow tag='div' tree={['users', '1']} >
+	</p>
+</TWRShow> => <div><p /></div>
+```
+
