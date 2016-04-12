@@ -198,7 +198,6 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		return true;
 	},
 	sameGlobe: function sameGlobe(nextProps) {
-		console.log('samePage', (0, _immutable.is)(this.newPage(), this.newPage(nextProps)));
 		return (0, _immutable.is)(this.newPage(), this.newPage(nextProps));
 	},
 	shouldComponentUpdate: function shouldComponentUpdate(nextProps) {
@@ -209,12 +208,15 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
   	I force the TWR components to update everytime because of a strange bug I cant figure out, 
   where components dont receive the most up-to-date state through redux connect. If anyone can figure this out...
   	*/
-		return true;
+		//return true
 		if (window.location.href != this.oldWindow) {
 			this.oldWindow = window.location.href;
 			return true;
 		}
-		return !this.sameGlobe(nextProps);
+		if (!this.sameGlobe(nextProps)) {
+			return true;
+		}
+		return !this.props.children == nextProps.children;
 	},
 	componentDidUpdate: function componentDidUpdate() {
 		var _this = this;
@@ -337,11 +339,11 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 					if (_firstInstance && _firstInstance.get) {
 						if (_firstInstance.get('id')) {
 							return seqInstance.map(function (_instance) {
-								return _instance.set('_globeTWR', page);
+								return _instance.set('tree', (0, _immutable.List)([tree.last(), _instance.get('id').toString()])).set('_globeTWR', page);
 							}).toOrderedMap();
 						}
 					}
-					return instance.set('_globeTWR', page);
+					return instance.set('tree', (0, _immutable.List)(tree)).set('_globeTWR', page);
 				}
 				return instance;
 			}
