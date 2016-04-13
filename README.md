@@ -42,15 +42,24 @@ I'm from the trenches. I build relatively simple websites for small businesses, 
 ##### Requirements: 
 React  
 Redux  
-React-Redux  
+React-Redux
+two-way-rest 
 
 Proper Setup Example.
 ```
 import { createStore, combineReducers} from 'redux';
+import {setAddress, setStore} from 'two-way-rest';
 import rootReducer from './reducers/index';
+
+//We setup the address for backend ajax queries
+setAddress('http://remoteurl.com');
+
 const store = createStore(
 	combineReducers(rootReducer)
 );
+//We send two-way-rest an exact copy of the store
+setStore(store);
+
 ReactDOM.render(
   <Provider store={store}>
     <MyRootComponent />
@@ -63,13 +72,6 @@ ReactDOM.render(
 fullState = {reducerName_1: reducerState_1, ...}
 ```
 
-
-We also have to setup the address for backend ajax queries and send it the store so we'll add this:
-```
-import {setAddress, setStore} from 'two-way-rest';
-setAddress('http://remoteurl.com');
-setStore(store);
-```
 #### Once the initial setup is complete, we’re free to do a little more setup…
 
 In order for these special forms to work, we need to create a parent component to hold them.
@@ -149,18 +151,18 @@ http://github.com/l2silver/two-way-rest-boilerplate
 <TWR* properties...>
 ```
 __tree__  
-type: Array  
+type: string  
 purpose: the backend and frontend location of where a TWR component will act  
 example_1: 
 ```
-['users', '1'] (used for updates/destructions of a specific instance)  
+users/1' (used for updates/destructions of a specific instance)  
 == 'http://remoteurl/users/1' (backend) 
 == reducerState.immutable = {users: {1: {id: 1, name: 'joe'}}} (frontend)
 ```
 
 example_2: 
 ```
-['users'] (used for create/index of a specific instance)  
+'users' (used for create/index of a specific instance)  
 == 'http://remoteurl/users' (backend) 
 == reducerState.immutable = {users: {...the results of a create/index} (frontend)
 ```
@@ -175,13 +177,12 @@ example_1:
 removes rest words like index, edit, and create from the end of a url)
 ```
 
-
 __instance__
 type: immutable object with tree and _globeTWR property
 purpose: the frontend representation of a backend object
 example_1: 
 ```
-<TWRShow tree={['users', '1']}> ==> sends its children an 
+<TWRShow tree='users/1'> ==> sends its children an 
 	instance prop of the get response to http://remoteUrl/users/1
 <TWRUpdate instance={ this.props.instance} /> ==> uses the 
 	instance prop's tree set the tree of the component 
@@ -197,11 +198,11 @@ this.props.instance.gex('child') ==> a child instance
 ```
 
 __outTree__
-type: Array
+type: string
 purpose: change the frontend location of where the results should be merged with.
 example_1: 
 ```
-<TWRShow tree={['users', '1']} outTree={{'users', '2'}}> ==> Get the user 1 backend
+<TWRShow tree='users/1' outTree='users/2'> ==> Get the user 1 backend
 instance and replace the user 2 frontend instance with it
 ```
 
@@ -210,7 +211,7 @@ type: Function
 purpose: replace the component's DOM with a new DOM that has access to all of the component's functions
 example_1: 
 ```
-<TWRShow tree={['users', '1']} replace={(user_1)=>{
+<TWRShow tree='users/1' replace={(user_1)=>{
 	console.log(user_1.instance(), 'returns the frontend instance')
 	return <p>{user_1.instance().get('name')}</p>
 }}
@@ -221,7 +222,7 @@ type: Function
 purpose: return a custom reducer function that takes the reducer state as an argument and returns a new reducer state
 example_1: 
 ```
-<TWRShow tree={['users', '1']} replace={(user_1)=>{
+<TWRShow tree='users/1' replace={(user_1)=>{
 	return <TWRCreate onClick={()=>{
 		user_1.custom((state)=>state.set('name', 'Example'))
 	}} /> 
@@ -233,7 +234,7 @@ type: Function
 purpose: an action creator for custom functions
 example_1: 
 ```
-<TWRUpdate tree={['users', '1']} callforward={(args)=>{
+<TWRUpdate tree='users/1' callforward={(args)=>{
 	args.get('dispatch')(
 		args.get('twr').customAction(
 			(state)=>state.set('name', 'Example')
@@ -247,7 +248,7 @@ type: boolean
 purpose: by default, the index and show components will only render the children if their instances exist. When forceRender is true, those components will render their children no matter what.
 example_1: 
 ```
-<TWRShow forceRender='true' tree={['users', '1']} >
+<TWRShow forceRender='true' tree='users/1' >
 	<p>I show no matter what! </p>
 </TWRShow>
 ```
@@ -257,7 +258,7 @@ type: boolean
 purpose: the index and show components will only fire a network request once per instance in the same reducer state. To fire everytime a component is mounted, set force to true.
 example_1: 
 ```
-<TWRShow force='true' tree={['users', '1']} >
+<TWRShow force='true' tree='users/1' >
 	<p>A new network request everytime the component is mounted</p>
 </TWRShow>
 ```
@@ -267,7 +268,7 @@ type: string
 purpose: change the element wrapping a TWR component to specific tag
 example_1: 
 ```
-<TWRShow tag='div' tree={['users', '1']} >
+<TWRShow tag='div' tree='users/1' >
 	</p>
 </TWRShow> => <div><p /></div>
 ```
