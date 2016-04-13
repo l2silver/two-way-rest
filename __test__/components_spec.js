@@ -7,10 +7,18 @@ import {setStore} from './../lib/componentProperties'
 import {DeclareReducer, StupidTWRLink, StupidTWRIndex} from './../lib/components'
 import {renderIntoDocument, scryRenderedDOMComponentsWithTag, findRenderedDOMComponentWithClass, createRenderer, shallowRenderer} from 'react-addons-test-utils';
 import sd from 'skin-deep';
+import nock from 'nock';
 
-setStore({dispatch: ()=>{}, getState: ()=>{}})
-describe('components', ()=>{
-	const instance = Map({
+
+const responseObject = [{
+                  id: 1
+                 }]
+
+nock('http://localhost:2000')
+                .get('/get_tests_index')
+                .reply(200, responseObject);
+
+const instance = Map({
 			tree: List(['tests', '1'])
 			, id: 1
 	})
@@ -21,6 +29,8 @@ describe('components', ()=>{
 			})
 		})
 	}
+setStore( {dispatch: ()=>{}, getState: ()=>state })
+describe('components', ()=>{
 	describe('TWRLink', ()=>{
 	  	it('has to address', ()=>{
 			const tree = sd.shallowRender(function() {
@@ -54,7 +64,7 @@ describe('components', ()=>{
 		describe('default', ()=>{
 			it('tree', ()=>{
 				const tree = sd.shallowRender(function() {
-		        	return <StupidTWRIndex tree={['tests']} state={state}>TEST</StupidTWRIndex>;
+		        	return <StupidTWRIndex tree='tests' state={state}>TEST</StupidTWRIndex>;
 		      	}, { reducer: "test" });
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
@@ -62,7 +72,7 @@ describe('components', ()=>{
 			});
 		  	it('page', ()=>{
 				const tree = sd.shallowRender(function() {
-		        	return <StupidTWRIndex tree={['tests']} state={state}>TEST</StupidTWRIndex>;
+		        	return <StupidTWRIndex tree='tests' state={state}>TEST</StupidTWRIndex>;
 		      	}, { reducer: "test" });
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
@@ -70,7 +80,7 @@ describe('components', ()=>{
 			});
 			it('instance', ()=>{
 				const tree = sd.shallowRender(function() {
-		        	return <StupidTWRIndex tree={['tests']} state={state}>TEST</StupidTWRIndex>;
+		        	return <StupidTWRIndex tree='tests' state={state}>TEST</StupidTWRIndex>;
 		      	}, { reducer: "test" });
 				const ins = tree.getMountedInstance();
 				const vdom = tree.getRenderOutput();
@@ -82,56 +92,28 @@ describe('components', ()=>{
 				}
 				it('url', ()=>{
 					const tree = sd.shallowRender(function() {
-			        	return <StupidTWRIndex tree={['tests']} state={state}>TEST</StupidTWRIndex>;
+			        	return <StupidTWRIndex tree='tests' state={state}>TEST</StupidTWRIndex>;
 			      	}, { reducer: "test" });
 					const ins = tree.getMountedInstance();
 					const vdom = tree.getRenderOutput();
 			  		expect(ins.url).to.equal(undefined);
 				});
 				it('fire index creator on mount', ()=>{
-					function index(args){
-						expect(args.get('reducer')).to.equal('test');
-					}
+					setStore( {dispatch: (action)=>{
+						if(action.verb == 'SET_GET'){
+							delete action.tree
+							return expect(action).to.eql({ type: 'test', verb: 'SET_GET' });
+						}
+						delete action.tree
+						delete action.response
+						return expect(action).to.eql({ type: 'test', verb: 'INDEX' });
+						
+					}, getState: ()=>state })
 					const renderedComponent = renderIntoDocument(
 					  <DeclareReducer reducer='test'>
-					  	<StupidTWRIndex tree={['tests']} state={state}></StupidTWRIndex>
-					  </DeclareReducer>
-					);
-				});
-				it('change oldTree state', ()=>{
-					function index(args){
-						expect(args.get('reducer')).to.equal('test');
-					}
-					const renderedComponent = renderIntoDocument(
-					  <DeclareReducer reducer='test'>
-					  	<StupidTWRIndex tree={['tests']} state={state} index={index}></StupidTWRIndex>
-					  </DeclareReducer>
-					);
-					const indexComponent = findRenderedDOMComponentWithClass(
-					  renderedComponent,
-					  'twr'
-					);
-				});
-				it('takes className prop', ()=>{
-					const renderedComponent = renderIntoDocument(
-					  <DeclareReducer reducer='test'>
-					  	<StupidTWRIndex tree={['tests']} state={state} index={index} className='testName'></StupidTWRIndex>
-					  </DeclareReducer>
-					);
-					const indexComponent = findRenderedDOMComponentWithClass(
-					  renderedComponent,
-					  'testName'
-					);
-				});
-				it('takes replace prop', ()=>{
-					const renderedComponent = renderIntoDocument(
-					  <DeclareReducer reducer='test'>
-					  	<StupidTWRIndex tree={['tests']} state={state} index={index} replace={()=>{return <div className='replaced'/>}}></StupidTWRIndex>
-					  </DeclareReducer>
-					);
-					const indexComponent = findRenderedDOMComponentWithClass(
-					  renderedComponent,
-					  'replaced'
+					  	<StupidTWRIndex tree='get_tests_index' state={state}></StupidTWRIndex>
+					</DeclareReducer>
+
 					);
 				});
 			})

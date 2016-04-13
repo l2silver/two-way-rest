@@ -3,15 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostUpdateProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultProperties = exports.getTree = undefined;
+exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostUpdateProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultIndexProperties = exports.defaultProperties = exports.getTree = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 exports.setStore = setStore;
 exports.getStore = getStore;
 exports.urlPath = urlPath;
+exports.generateTree = generateTree;
 exports.getIndex = getIndex;
-exports.convertTree = convertTree;
 exports.createErrors = createErrors;
 exports.benchmark = benchmark;
 exports.createArgs = createArgs;
@@ -46,6 +46,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var i = (0, _i2.default)(true);
+
 var store;
 function setStore(newStore) {
 	store = newStore;
@@ -53,16 +55,21 @@ function setStore(newStore) {
 function getStore() {
 	return store;
 }
-
-var i = (0, _i2.default)(true);
-
 function urlPath(tree) {
 	return '/' + tree.join('/');
 }
-
-function _getTree(start, location) {
+function generateTree(tree, Comp) {
+	if ((typeof tree === 'undefined' ? 'undefined' : _typeof(tree)) == 'object') {
+		return (0, _immutable.List)(tree);
+	}
+	if (tree.charAt(0) == '/') {
+		return _getTree(Comp.reducer(), tree);
+	}
+	return _getTree(Comp.reducer(), tree);
+}
+function _getTree(start, location, remote) {
 	var fullUrl = (0, _immutable.List)(location.split('/'));
-	var index = getIndex(start, fullUrl);
+	var index = getIndex(start, fullUrl, location, remote);
 	var url = fullUrl.slice(index + 1);
 	if (fullUrl.last() == 'edit' || fullUrl.last() == 'index' || fullUrl.last() == 'show') {
 		return url.pop();
@@ -71,17 +78,10 @@ function _getTree(start, location) {
 }
 
 exports.getTree = _getTree;
-function getIndex(start, fullUrl) {
+function getIndex(start, fullUrl, location, url) {
+	var remote = url ? url : _fetch.productionUrl;
 	var index = fullUrl.indexOf(start);
-	return index ? index : fullUrl.indexOf(_fetch.productionUrl) ? fullUrl.indexOf(_fetch.productionUrl) : -1;
-}
-
-function convertTree(tree) {
-	if (Object.prototype.toString.call(tree) === '[object Array]') {
-		return tree;
-	} else {
-		return tree.toList().toJS();
-	}
+	return index > 0 ? index : location.match(remote) ? fullUrl.size - location.replace(remote, '').split('/').length : -1;
 }
 
 function createErrors(instance) {
@@ -108,14 +108,6 @@ function createErrors(instance) {
 	return '';
 }
 var benchmarkStatus = false;
-
-var ignoreProps = {
-	state: true,
-	instance: true,
-	instances: true,
-	replace: true,
-	children: true
-};
 
 function benchmark(name, fn) {
 	if (benchmarkStatus) {
@@ -200,32 +192,60 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	sameGlobe: function sameGlobe(nextProps) {
 		return (0, _immutable.is)(this.newPage(), this.newPage(nextProps));
 	},
-	shouldComponentUpdate: function shouldComponentUpdate(nextProps) {
+	checkShouldComponentUpdate: function checkShouldComponentUpdate(nextProps) {
+		var _this = this;
+
 		if (this.props.forceUpdate) {
 			return true;
 		}
-		/*
-  	I force the TWR components to update everytime because of a strange bug I cant figure out, 
-  where components dont receive the most up-to-date state through redux connect. If anyone can figure this out...
-  	*/
-		//return true
 		if (window.location.href != this.oldWindow) {
 			this.oldWindow = window.location.href;
 			return true;
 		}
-		if (!this.sameGlobe(nextProps)) {
+
+		var propNames = Object.keys(nextProps);
+		var newProps = propNames.reduce(function (bool, propName) {
+			if (bool) {
+				return bool;
+			}
+			switch (propName) {
+				case 'state':
+					return bool;
+				case 'tree':
+					return bool;
+			}
+			if (propName == 'state') {
+				return bool;
+			}
+
+			if ((0, _immutable.is)(nextProps[propName], _this.props[propName])) {
+				return false;
+			}
+			return true;
+		}, false);
+
+		if (newProps) {
 			return true;
 		}
-		return !this.props.children == nextProps.children;
+
+		return !this.sameGlobe(nextProps);
+	},
+	shouldComponentUpdate: function shouldComponentUpdate(nextProps) {
+		if (this.checkShouldComponentUpdate(nextProps)) {
+			this.getInstance = undefined;
+			this.getPage = undefined;
+			return true;
+		}
+		return false;
 	},
 	componentDidUpdate: function componentDidUpdate() {
-		var _this = this;
+		var _this2 = this;
 
 		return benchmark('componentDidUpdate', function () {
-			_this.resetFunction();
-			if (_this.checkTreeChangeStatus) {
-				_this.globalResetFunction();
-				_this.checkTreeChangeStatus = false;
+			_this2.resetFunction();
+			if (_this2.checkTreeChangeStatus) {
+				_this2.globalResetFunction();
+				_this2.checkTreeChangeStatus = false;
 			}
 		});
 	},
@@ -308,14 +328,20 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		}
 		return false;
 	},
-	page: function page(props) {
+	generatePage: function generatePage(props) {
 		var State = this.newPage(props);
 		if (State) {
 			return State.set('_globeTWR', State);
 		}
 		return false;
 	},
-	instance: function instance(props) {
+	page: function page(props) {
+		if (props || _typeof(this.getPage) != undefined) {
+			this.getPage = this.generatePage(props);
+		}
+		return this.getPage;
+	},
+	generateInstance: function generateInstance(props) {
 		var useProps = this.whichProps(props);
 		var tree = this.tree(useProps);
 		var page = this.page(useProps);
@@ -331,24 +357,35 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 			var instance = page.getIn(tree);
 			if (instance) {
 				if (instance.set) {
-					if ((0, _immutable.is)((0, _immutable.Map)({ TWRShow: true }), instance.delete('_globeTWR'))) {
+					if ((0, _immutable.is)((0, _immutable.Map)({ TWRShow: true }), instance)) {
 						return false;
 					}
-					var seqInstance = instance.toSeq();
-					var _firstInstance = seqInstance.first();
-					if (_firstInstance && _firstInstance.get) {
-						if (_firstInstance.get('id')) {
-							return seqInstance.map(function (_instance) {
-								return _instance.set('tree', (0, _immutable.List)([tree.last(), _instance.get('id').toString()])).set('_globeTWR', page);
-							}).toOrderedMap();
+					if (this.index()) {
+						var seqInstance = instance.toSeq();
+						var _firstInstance = seqInstance.first();
+
+						if (_firstInstance && _firstInstance.get) {
+							if (_firstInstance.get('id')) {
+								return seqInstance.map(function (_instance) {
+									return _instance.set('tree', (0, _immutable.List)([tree.last(), _instance.get('id').toString()])).set('_globeTWR', page);
+								}).toOrderedMap();
+							}
 						}
+						return false;
 					}
+
 					return instance.set('tree', (0, _immutable.List)(tree)).set('_globeTWR', page);
 				}
 				return instance;
 			}
 		}
 		return false;
+	},
+	instance: function instance(props) {
+		if (props || _typeof(this.getInstance) != undefined) {
+			this.getInstance = this.generateInstance(props);
+		}
+		return this.getInstance;
 	},
 
 	resetFunction: function resetFunction() {
@@ -378,7 +415,7 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	},
 	getTree: function getTree(props) {
 		if (props.tree) {
-			return (0, _immutable.List)(props.tree);
+			return generateTree(props.tree, this);
 		}
 		if (props.location) {
 			return _getTree(this.reducer(), props.location);
@@ -387,7 +424,7 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 
 			return props.instance.get('tree');
 		}
-		throw 'This instance has no tree instance, or location';
+		throw 'This instance has no tree instance, or location' + props.tree;
 	},
 	outTree: function outTree() {
 		if (this.props.outTree) {
@@ -411,12 +448,22 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 			custom: this.custom,
 			customAction: this.customAction
 		};
+	},
+	index: function index() {
+		return false;
+	}
+
+});
+
+var defaultIndexProperties = exports.defaultIndexProperties = (0, _immutable.Map)({
+	index: function index() {
+		return true;
 	}
 });
 
 var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 	render: function render() {
-		var _this2 = this;
+		var _this3 = this;
 
 		var DomTag = this.props.tag ? this.props.tag : 'div';
 
@@ -427,7 +474,7 @@ var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 				}
 				var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
 					if (child) {
-						return _react2.default.cloneElement(child, _this2.childrenProps());
+						return _react2.default.cloneElement(child, _this3.childrenProps());
 					}
 				});
 				return _react2.default.createElement(
@@ -446,7 +493,7 @@ var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 
 var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties = {
 	render: function render() {
-		var _this3 = this;
+		var _this4 = this;
 
 		var DomTag = this.props.tag ? this.props.tag : 'div';
 
@@ -456,7 +503,7 @@ var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties 
 			}
 
 			var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
-				return _react2.default.cloneElement(child, _this3.childrenProps());
+				return _react2.default.cloneElement(child, _this4.childrenProps());
 			});
 			return _react2.default.createElement(
 				DomTag,
@@ -474,7 +521,7 @@ var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties 
 
 var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 	render: function render() {
-		var _this4 = this;
+		var _this5 = this;
 
 		var DomTag = this.props.tag ? this.props.tag : 'form';
 
@@ -484,7 +531,7 @@ var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 			}
 
 			var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
-				return _react2.default.cloneElement(child, _this4.childrenProps());
+				return _react2.default.cloneElement(child, _this5.childrenProps());
 			});
 			return _react2.default.createElement(
 				DomTag,
@@ -512,10 +559,10 @@ var defaultCreateSubstate = exports.defaultCreateSubstate = {
 		return this.substateId;
 	},
 	unmount: function unmount() {
-		var _this5 = this;
+		var _this6 = this;
 
 		actionCreators.substateDeleteCreator(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
-			return content.set('id', _this5.getId());
+			return content.set('id', _this6.getId());
 		}))(store.dispatch, store.getState);
 	}
 };
@@ -532,11 +579,11 @@ var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)(
 		return this.substateId;
 	},
 	submitForm: function submitForm(event) {
-		var _this6 = this;
+		var _this7 = this;
 
 		event.preventDefault();
 		actionCreators.create(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
-			return content.set('id', _this6.getId());
+			return content.set('id', _this7.getId());
 		}))(store.dispatch, store.getState);
 	},
 	path: function path() {

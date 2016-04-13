@@ -31,7 +31,6 @@
     "form-data": "^1.0.0-rc3",
     "i": "^0.3.4",
     "immutable": "^3.7.6",
-    "inflection": "^1.8.0",
     "methods": "^1.1.2",
     "promise": "^7.1.1",
     "react": "^0.14.7",

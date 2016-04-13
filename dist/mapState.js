@@ -56,7 +56,7 @@ function checkTWREntries(_globe, _firstInstance, _tree) {
 						var _globeInstance = _globe.getIn([pluralEntry, _instanceTWR.toString()]);
 						if (_globeInstance) {
 							return {
-								v: _globeInstance.set('_globeTWR', _globe)
+								v: _globeInstance.asMutable().set('_globeTWR', _globe).set('tree', (0, _immutable.List)([pluralEntry, _instanceTWR.toString()])).asImmutable()
 							};
 						}
 						return {
@@ -66,7 +66,8 @@ function checkTWREntries(_globe, _firstInstance, _tree) {
 
 					if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
 				}
-				return _previousInstance.get(_entry.toString());
+				var _nextInstance = _previousInstance.get(_entry.toString());
+				return _nextInstance;
 			}
 			return _previousInstance;
 		}, _firstInstance);
@@ -126,7 +127,7 @@ function wrapMapState(js, tree) {
 
 	var startTime = new Date().getTime();
 	var nextState = mapState(_immutable.Map.isMap(js) || _immutable.List.isList(js) ? js : (0, _immutable.fromJS)(js), tree, (0, _immutable.Map)().asMutable());
-	console.log('mapStateTime', new Date().getTime() - startTime);
+	//console.log('mapStateTime', new Date().getTime() - startTime);
 	return globe.mergeDeep(nextState.asImmutable());
 }
 
@@ -240,11 +241,9 @@ function recursiveSetInitialObject(globe, mapObject) {
 function createInitialGlobe(globes, mapObject) {
 	try {
 		if ((0, _immutable.is)(globes.getIn(mapObject.get('thisTree')), mapObject.get('thisObject'))) {
-			//console.log('equal?')
 			return globes;
 		}
 		var initialGlobe = recursiveSetInitialObject(globes, mapObject);
-		//console.log('LOOKHERE', initialGlobe, mapObject);
 		return initialGlobe;
 	} catch (e) {
 		console.log('create initialGlobe error', e, mapObject.toJS(), globes.toJS(), globes.getIn(mapObject.get('thisTree')));
@@ -252,7 +251,6 @@ function createInitialGlobe(globes, mapObject) {
 }
 function createNextGlobe(initialGlobe, mapObject) {
 	try {
-		//console.log('this fires last', mapObject)
 		if (mapObject.get('nextObject')) {
 			if (mapObject.get('thisObject')) {
 
@@ -276,77 +274,3 @@ function createNextGlobe(initialGlobe, mapObject) {
 		console.log('Create Next Globe Error', initialGlobe);
 	}
 }
-
-/*
-
-export function mapState(js, tree, globe = Map()){
-	if(typeof js !== 'object' || js === null){
-		return globe.setIn(tree, js);
-	}
-	if(Array.isArray(js)){
-		if(js[0]){
-			if(js[0].id){
-				return addToGLobe(orderedMap(js), tree, globe);
-			}
-		}
-		return addToGLobe(js, tree, globe);
-	}
-	try{
-		if(List.isList(js)){
-			return addToGLobe(js, tree, globe)
-		}
-		if(Map.isMap(js)){
-			return addToGLobe(js, tree, globe);
-		}
-		return addToGLobe(Map(js), tree, globe);	
-	}catch(e){
-		console.log('in error')
-		console.log('js', js, js.toJS ? js.toJS() : 'not immutable')
-		console.log('tree', tree.toJS())
-		console.log(e)
-		throw e
-	}
-	
-}
-*/
-
-/*
-export function treeObject(mapObject, globes){
-	try{
-		if(mapObject.get('thisTree').size > 2){
-			const objectToAddTree = globes.getIn(mapObject.get('thisTree').pop())
-			if(objectToAddTree && objectToAddTree.get && objectToAddTree.get('id')){
-				return globes.setIn(mapObject.get('thisTree'), mapObject.get('thisObject'));		
-			}
-		}
-		return globes
-	}catch(e){
-		console.log('treeObject error', e, mapObject.toJS())
-	}
-}
-*/
-
-/*
-export function addTreeToObject(mapObject, globes){
-	try{
-		if(typeof mapObject.get('thisObject') == 'object' && !Array.isArray(mapObject.get('thisObject')) && !List.isList(mapObject.get('thisObject')) && !OrderedMap.isOrderedMap(mapObject.get('thisObject'))  ){
-
-			if( Map.isMap(mapObject.get('thisObject')) ){
-				if(mapObject.get('thisObject').get('id')){
-					return globes.mergeIn(mapObject.get('thisTree'), {tree: mapObject.get('thisTree')});	
-				}
-			}else{
-				if(mapObject.get('thisObject').id){
-					return globes.setIn(mapObject.get('thisTree'), Map(mapObject.get('thisObject')).merge({tree: mapObject.get('thisTree')}));	
-				}
-				
-			}
-			
-		}
-		return globes
-
-	}catch(e){
-		console.log("ERROR IN addTreeToObject", e)
-	}
-
-}*/

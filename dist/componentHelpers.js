@@ -81,7 +81,7 @@ function mapIf(immutableObject, fn, False) {
 						};
 					}
 					return {
-						v: immutableObject.toSeq().filterNot(function (v, k) {
+						v: immutableObject.valueSeq().filterNot(function (v, k) {
 							return k == '_globeTWR';
 						}).map(function (v) {
 							if (v.get && v.get('id')) {

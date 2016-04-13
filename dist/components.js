@@ -117,7 +117,7 @@ var StupidTWRDestroyFront = exports.StupidTWRDestroyFront = _react2.default.crea
 
 }).toJS());
 
-var StupidTWRIndex = exports.StupidTWRIndex = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetProperties).merge({
+var StupidTWRIndex = exports.StupidTWRIndex = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetProperties).merge(_componentProperties.defaultIndexProperties).merge({
 	mount: function mount() {
 		return actionCreators.index((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)))((0, _componentProperties.getStore)().dispatch, (0, _componentProperties.getStore)().getState);
 	}
@@ -130,17 +130,19 @@ var StupidTWRShow = exports.StupidTWRShow = _react2.default.createClass(_compone
 
 var StupidTWRShowFront = exports.StupidTWRShowFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetRenderProperties).toJS());
 
-var StupidTWRIndexFront = exports.StupidTWRIndexFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetRenderProperties).toJS());
+var StupidTWRIndexFront = exports.StupidTWRIndexFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultGetRenderProperties).merge(_componentProperties.defaultIndexProperties).toJS());
 
 var StupidTWRCreate = exports.StupidTWRCreate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
 	getTree: function getTree(props) {
-		return (0, _immutable.List)(props.tree).push(this.getId());
+		var listTree = (0, _componentProperties.generateTree)(props.tree, this);
+		return listTree.push(this.getId());
 	}
 }).toJS());
 
 var StupidTWRCreateFront = exports.StupidTWRCreateFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
 	getTree: function getTree(props) {
-		return (0, _immutable.List)(props.tree).push(this.getId());
+		var listTree = (0, _componentProperties.generateTree)(props.tree, this);
+		return listTree.push(this.getId());
 	},
 	submitForm: function submitForm(event) {
 		var _this2 = this;
