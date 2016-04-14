@@ -308,11 +308,15 @@ var DeclareReducer = exports.DeclareReducer = _react2.default.createClass({
 		return true;
 	},
 	childContextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
+		reducer: _react2.default.PropTypes.string.isRequired,
+		listTables: _react2.default.PropTypes.func.isRequired,
+		parent: _react2.default.PropTypes.object.isRequired
 	},
 	getChildContext: function getChildContext() {
 		return {
-			reducer: this.props.reducer
+			reducer: this.props.reducer,
+			listTables: function listTables() {},
+			parent: this
 		};
 	},
 	render: function render() {

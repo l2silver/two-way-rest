@@ -46,6 +46,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var i = (0, _i2.default)(true);
 
 var store;
@@ -146,7 +148,56 @@ function createArgs(twr, form) {
 
 var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	contextTypes: {
-		reducer: _react2.default.PropTypes.string.isRequired
+		reducer: _react2.default.PropTypes.string.isRequired,
+		listTables: _react2.default.PropTypes.func.isRequired,
+		parent: _react2.default.PropTypes.object.isRequired
+	},
+	childContextTypes: {
+		listTables: _react2.default.PropTypes.func.isRequired,
+		parent: _react2.default.PropTypes.object.isRequired
+	},
+	getChildContext: function getChildContext() {
+		return {
+			listTables: this.addChildListTables,
+			parent: this
+		};
+	},
+	addChildListTables: function addChildListTables(childListTables) {
+		this.childListTables.merge(childListTables);
+	},
+	setListTables: function setListTables(table) {
+		this.listTables.set(table, (0, _immutable.Map)({ name: table, reducer: this.reducer() }));
+	},
+	getListTables: function getListTables() {
+		return this.listTables.merge(this.childListTables);
+	},
+	gex: function gex(_table, instance) {
+		var _this = this;
+
+		try {
+			this.setListTables(_table);
+			if (instance) {
+				var _ids = instance.get(_table + 'TWR');
+				if (_ids) {
+					if (_immutable.List.isList(_ids)) {
+						return _ids.reduce(function (orderedMap, id) {
+							var _foundInstance = _this.page().getIn([_table, id.toString()]);
+							if (_foundInstance) {
+								var _id = id.toString();
+								return orderedMap.set(_id, _foundInstance.set('tree', (0, _immutable.List)([_table, _id])));
+							}
+							return orderedMap;
+						}, (0, _immutable.OrderedMap)());
+					}
+					var _tables = _table.pluralize;
+					return this.page().getIn([_tables, _ids.toString()]).set('tree', (0, _immutable.List)([_tables, _ids.toString()]));
+				}
+			}
+			return false;
+		} catch (e) {
+			console.log('GEX ERROR', e);
+			throw e;
+		}
 	},
 	createDisposableContent: function createDisposableContent(content) {
 		this.disposableContent = content;
@@ -190,10 +241,23 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		return true;
 	},
 	sameGlobe: function sameGlobe(nextProps) {
-		return (0, _immutable.is)(this.newPage(), this.newPage(nextProps));
+		var _this2 = this;
+
+		var listTables = this.getListTables();
+		var bool = listTables.toSeq().reduce(function (bool, table) {
+			if (bool) {
+				//console.log('bool', is(this.newPage().get(table), this.newPage(nextProps).get(table)),
+				//	this.newPage().get(table).toJS(), this.newPage(nextProps).get(table).toJS());
+				return _this2.props.state[table.get('reducer')].get(table.get('name')) == nextProps.state[table.get('reducer')].get(table.get('name'));
+				return (0, _immutable.is)(_this2.props.state[table.get('reducer')].get(table.get('name')), nextProps.state[table.get('reducer')].get(table.get('name')));
+			}
+			return false;
+		}, true);
+		//console.log('bool', bool)
+		return bool;
 	},
 	checkShouldComponentUpdate: function checkShouldComponentUpdate(nextProps) {
-		var _this = this;
+		var _this3 = this;
 
 		if (this.props.forceUpdate) {
 			return true;
@@ -211,14 +275,8 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 			switch (propName) {
 				case 'state':
 					return bool;
-				case 'tree':
-					return bool;
 			}
-			if (propName == 'state') {
-				return bool;
-			}
-
-			if ((0, _immutable.is)(nextProps[propName], _this.props[propName])) {
+			if (nextProps[propName] == _this3.props[propName]) {
 				return false;
 			}
 			return true;
@@ -239,20 +297,31 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		return false;
 	},
 	componentDidUpdate: function componentDidUpdate() {
-		var _this2 = this;
-
-		return benchmark('componentDidUpdate', function () {
-			_this2.resetFunction();
-			if (_this2.checkTreeChangeStatus) {
-				_this2.globalResetFunction();
-				_this2.checkTreeChangeStatus = false;
-			}
-		});
+		this.context.listTables(this.getListTables());
+		/*
+  console.log('passback', 
+  	this.context.parent.tree ? this.context.parent.tree().toJS() : 'DeclareReducer', 
+  	this.context.parent.getListTables ? this.context.parent.getListTables().toJS() : 'DeclareReducer'
+  	)
+  console.log('passbackThisTree', this.tree().toJS(), this.getListTables().toJS())
+  */
+		/*
+  return benchmark('componentDidUpdate', ()=>{this.resetFunction();
+  if(this.checkTreeChangeStatus){
+  	this.globalResetFunction();
+  	this.checkTreeChangeStatus = false
+  }})
+  */
+	},
+	componentWillMount: function componentWillMount() {
+		this.listTables = (0, _immutable.Map)(_defineProperty({}, this.tree().first(), (0, _immutable.Map)({ name: this.tree().first(), reducer: this.reducer() }))).asMutable();
+		this.childListTables = (0, _immutable.Map)().asMutable();
 	},
 	componentWillUpdate: function componentWillUpdate() {
 		return this.checkTreeChange();
 	},
 	componentDidMount: function componentDidMount() {
+		this.context.listTables(this.getListTables());
 		return this.checkTreeChange();
 	},
 	checkForDifferentPageRerender: function checkForDifferentPageRerender(oldTree, newTree) {
@@ -331,7 +400,7 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	generatePage: function generatePage(props) {
 		var State = this.newPage(props);
 		if (State) {
-			return State.set('_globeTWR', State);
+			return State;
 		}
 		return false;
 	},
@@ -367,14 +436,14 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 						if (_firstInstance && _firstInstance.get) {
 							if (_firstInstance.get('id')) {
 								return seqInstance.map(function (_instance) {
-									return _instance.set('tree', (0, _immutable.List)([tree.last(), _instance.get('id').toString()])).set('_globeTWR', page);
+									return _instance.set('tree', (0, _immutable.List)([tree.last(), _instance.get('id').toString()]));
 								}).toOrderedMap();
 							}
 						}
 						return false;
 					}
 
-					return instance.set('tree', (0, _immutable.List)(tree)).set('_globeTWR', page);
+					return instance.set('tree', (0, _immutable.List)(tree));
 				}
 				return instance;
 			}
@@ -463,7 +532,7 @@ var defaultIndexProperties = exports.defaultIndexProperties = (0, _immutable.Map
 
 var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 	render: function render() {
-		var _this3 = this;
+		var _this4 = this;
 
 		var DomTag = this.props.tag ? this.props.tag : 'div';
 
@@ -474,7 +543,7 @@ var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 				}
 				var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
 					if (child) {
-						return _react2.default.cloneElement(child, _this3.childrenProps());
+						return _react2.default.cloneElement(child, _this4.childrenProps());
 					}
 				});
 				return _react2.default.createElement(
@@ -493,7 +562,7 @@ var defaultGetRenderProperties = exports.defaultGetRenderProperties = {
 
 var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties = {
 	render: function render() {
-		var _this4 = this;
+		var _this5 = this;
 
 		var DomTag = this.props.tag ? this.props.tag : 'div';
 
@@ -503,7 +572,7 @@ var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties 
 			}
 
 			var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
-				return _react2.default.cloneElement(child, _this4.childrenProps());
+				return _react2.default.cloneElement(child, _this5.childrenProps());
 			});
 			return _react2.default.createElement(
 				DomTag,
@@ -521,7 +590,7 @@ var defaultPostRenderClickProperties = exports.defaultPostRenderClickProperties 
 
 var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 	render: function render() {
-		var _this5 = this;
+		var _this6 = this;
 
 		var DomTag = this.props.tag ? this.props.tag : 'form';
 
@@ -531,7 +600,7 @@ var defaultPostRenderProperties = exports.defaultPostRenderProperties = {
 			}
 
 			var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
-				return _react2.default.cloneElement(child, _this5.childrenProps());
+				return _react2.default.cloneElement(child, _this6.childrenProps());
 			});
 			return _react2.default.createElement(
 				DomTag,
@@ -559,10 +628,10 @@ var defaultCreateSubstate = exports.defaultCreateSubstate = {
 		return this.substateId;
 	},
 	unmount: function unmount() {
-		var _this6 = this;
+		var _this7 = this;
 
 		actionCreators.substateDeleteCreator(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
-			return content.set('id', _this6.getId());
+			return content.set('id', _this7.getId());
 		}))(store.dispatch, store.getState);
 	}
 };
@@ -579,11 +648,11 @@ var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)(
 		return this.substateId;
 	},
 	submitForm: function submitForm(event) {
-		var _this7 = this;
+		var _this8 = this;
 
 		event.preventDefault();
 		actionCreators.create(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
-			return content.set('id', _this7.getId());
+			return content.set('id', _this8.getId());
 		}))(store.dispatch, store.getState);
 	},
 	path: function path() {
