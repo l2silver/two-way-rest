@@ -4,6 +4,7 @@ import {
 	, fromJSOrdered
 	, transformResponse
 	, mapState
+	, wrapMapState
 	, checkTWREntries
 	, idArray
 	, orderedMap
@@ -12,7 +13,7 @@ import {
 } from './../lib/mapState';
 
 
-import {fromJS, Map, OrderedMap, List, Seq, is} from 'immutable';
+import {Range, fromJS, Map, OrderedMap, List, Seq, is} from 'immutable';
 import inflect from 'i';
 inflect(true);
 
@@ -57,7 +58,26 @@ describe('mapState', ()=>{
 
 	})
 	
-	describe('mapState', ()=>{
+	describe.only('mapState', ()=>{
+		it.skip('benchmark', ()=>{
+			const input = Range(1,10000).reduce((list, value)=>{
+				const initialObject = {
+					id: value
+					, fake_tests: [
+						{
+							  id: value
+						}
+					]
+				};
+				list.push(initialObject)
+				return list
+			},[])
+			const startTime = new Date().getTime();
+			fromJS(input)
+			console.log('fromJS', new Date().getTime() - startTime);
+			const globe = wrapMapState(fromJS(input), List(['tests']) ).get('fake_tests')
+			//console.log(globe )
+		})
 		it('simple map', ()=>{
 			const initialObject = {
 				id: 1
@@ -80,8 +100,7 @@ describe('mapState', ()=>{
 					})
 				}),
 			});
-
-			expect(mapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
+			expect(wrapMapState(fromJS(initialObject), List(['tests', '1']))).to.equal(globe);	
 		});
 
 		it('simple', ()=>{
@@ -108,7 +127,7 @@ describe('mapState', ()=>{
 				}),
 			});
 
-			expect(mapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
+			expect(wrapMapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
 		});
 
 		it('simple w/ single', ()=>{
@@ -131,7 +150,7 @@ describe('mapState', ()=>{
 				}),
 			});
 
-			expect(mapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
+			expect(wrapMapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
 		});
 
 		it('deep relations', ()=>{
@@ -169,7 +188,7 @@ describe('mapState', ()=>{
 			});
 
 
-			expect(mapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
+			expect(wrapMapState(fromJS(initialObject), List(['tests', '1']), Map())).to.equal(globe);	
 		});
 		it('array', ()=>{
 			const initialObject = [{
@@ -184,7 +203,7 @@ describe('mapState', ()=>{
 			});
 
 
-			expect(mapState(fromJS(initialObject), List(['tests']), Map())).to.equal(globe);	
+			expect(wrapMapState(fromJS(initialObject), List(['tests']), Map())).to.equal(globe);	
 		});
 		it('array with relations', ()=>{
 			const fake_tests = [{id: 1}];
@@ -206,7 +225,7 @@ describe('mapState', ()=>{
 						})
 					})
 			});
-			expect(mapState(fromJS(initialObject), List(['tests']), Map())).to.equal(globe);
+			expect(wrapMapState(fromJS(initialObject), List(['tests']), Map())).to.equal(globe);
 		});
 	})
 	
