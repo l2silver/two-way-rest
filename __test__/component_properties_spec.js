@@ -67,5 +67,69 @@ describe('components_properties', ()=>{
 			const MComponent = genMock(defaultProperties ,{reducer: 'test'})
 			expect(MComponent.getTree({tree:'tests'})).to.equal(List(['tests']))
 		})
+		describe.only('gex', ()=>{
+			const instanceTest = fromJS({id: 1, fake_testsTWR: [1]})
+			const instanceFakeTest = fromJS({id: 1})
+			const state = {
+				test:fromJS({
+					tests: {1: instanceTest},
+					fake_tests: {1: instanceFakeTest},	
+				})
+			
+			}
+			it('list instance example', ()=>{
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				expect(MComponent.gex('fake_tests', instanceTest)).to.equal(OrderedMap({1: instanceFakeTest.set('tree', List(['fake_tests', '1']))}))
+			})
+			it('single instance example', ()=>{
+				const instanceSingle = fromJS({id: 1, fake_testsTWR: 1})
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				expect(MComponent.gex('fake_tests', instanceSingle)).to.equal(instanceFakeTest.set('tree', List(['fake_tests', '1'])))
+			})
+			it('two degrees single instance', ()=>{
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				expect(MComponent.gex(['fake_tests', '1'], instanceTest)).to.equal(instanceFakeTest.set('tree', List(['fake_tests', '1'])))
+			})
+			it('three degrees single instance', ()=>{
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				expect(MComponent.gex(['fake_tests', '1', 'id'], instanceTest)).to.equal(1)
+			})
+			it('no instance', ()=>{
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				expect(MComponent.gex(['fake_tests'])).to.equal(
+					OrderedMap(
+						{1: 
+							instanceFakeTest.set('tree', List(['fake_tests', '1']) )
+						})
+					)
+			})
+			it('adds to list table', ()=>{
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				MComponent.gex(['fake_tests', '1', 'id'], instanceTest)
+				expect(MComponent.getListTables()).to.equal(
+					Map ({ 
+						"tests": Map ({ "name": "tests", "reducer": "test" }),
+						"fake_tests": Map ({ "name": "fake_tests", "reducer": "test" })
+					})
+				)
+			})
+			it('adds to list table no instance', ()=>{
+				var MComponent = genMock(defaultProperties ,{reducer: 'test', tree: 'tests', state})
+				MComponent.componentWillMount()
+				MComponent.gex(['fake_tests'])
+				expect(MComponent.getListTables()).to.equal(
+					Map ({ 
+						"tests": Map ({ "name": "tests", "reducer": "test" }),
+						"fake_tests": Map ({ "name": "fake_tests", "reducer": "test" })
+					})
+				)
+			})
+		})
 	})
 })

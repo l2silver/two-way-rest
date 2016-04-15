@@ -58,7 +58,7 @@ describe('mapState', ()=>{
 
 	})
 	
-	describe.only('mapState', ()=>{
+	describe('mapState', ()=>{
 		it.skip('benchmark', ()=>{
 			const input = Range(1,10000).reduce((list, value)=>{
 				const initialObject = {
