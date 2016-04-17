@@ -1016,8 +1016,9 @@ body .markdown-body
 }
 </style><title>README</title></head><body><article class="markdown-body"><h1 id="two-way-rest"><a name="user-content-two-way-rest" href="#two-way-rest" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Two-Way-Rest</h1>
 <p>A lot of things, but more specifically a react-redux plugin that facilitates changes to the state and backend data sources.</p>
+<p><a href="https://travis-ci.org/l2silver/two-way-rest"><img alt="build status" src="https://travis-ci.org/l2silver/two-way-rest.svg?style=flat-square" /></a></p>
 <p>Example:<br />
-<pre><code>&lt;TWRCreate tree={[‘users’]}&gt;
+<pre><code>&lt;TWRCreate tree=‘users’&gt;
  &lt;input type=’text’ name=’name’ /&gt;
  &lt;input type=’submit’ /&gt;
 &lt;/TWRCreate&gt;
@@ -1030,8 +1031,8 @@ After submitting this magic ‘form’, if no errors are thrown, the state is up
 &lt;/TWRUpdate&gt;
 </code></pre><br />
 Again, if successful, the form updates both the frontend and the backend. </p>
-<p><em>A user instance is simply a regular user object with a special tree property:</em><br />
-{id: 1, name: ‘Joe’, <strong>tree: [‘users’, 1]</strong>}</p>
+<p><em>A user instance is simply an immutable user object with a special tree property:</em><br />
+Map {id: 1, name: ‘Joe’, <strong>tree: List [‘users’, 1]</strong>}</p>
 <p>Suppose that instead of updating a user’s frontend and backend, you just wanted to update the frontend.</p>
 <p><pre><code>&lt;TWRUpdateFront instance={userInstance}&gt;
     &lt;input type=’text’ name=’visible’ value=’true’ /&gt;
@@ -1040,16 +1041,31 @@ Again, if successful, the form updates both the frontend and the backend. </p>
 </code></pre><br />
 Now your frontend user has a new property(or updates an old property) called visible, and its value is true. </p>
 <h2 id="motivation"><a name="user-content-motivation" href="#motivation" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Motivation:</h2>
-<p>I&rsquo;m from the trenches. I build relatively simple websites for small businesses, where the priority is stability and development speed. When I started working with redux, I loved the structure, but hated the steps. Something as simple as toggling a button meant changing the react component, the action creator and the reducer. This process also meant extracting the code away from the react components, which felt counter intuitive, since one of the advantages of react is the code being visible while constructing the DOM. I built two-way-rest to solve these issues.</p>
+<p>I&rsquo;m from the trenches. I build relatively simple websites for small businesses, where the priority is stability and development speed. When I started working with redux, I loved the structure, but hated the steps. Something as simple as toggling a button meant changing the react component, the action creator and the reducer. I built two-way-rest to expedite this process.</p>
+<h2 id="fundamental-theory"><a name="user-content-fundamental-theory" href="#fundamental-theory" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Fundamental Theory:</h2>
+<p>There are two fundamental theories that power two-way-rest. The first is the idea that public functions that manipulate a database should have the same relative location as their frontend equivalents. The second, and the more crucial, is that information transmission should always be packaged in a key-value object, as opposed to just a value. The reason is because keys in key-value objects inuitively tell us the location of where a message should go. When these key-value objects are placed in a database which powers all of the logic in an application, they can, in many cases, eliminate the need to write code for receiving messages.</p>
 <h2 id="setup"><a name="user-content-setup" href="#setup" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Setup:</h2>
 <h5 id="requirements"><a name="user-content-requirements" href="#requirements" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Requirements:</h5>
 <p>React<br />
 Redux<br />
-React-Redux  </p>
+React-Redux<br />
+redux-batched-actions<br />
+two-way-rest </p>
 <p>Proper Setup Example.<br />
-<pre><code>import { createStore } from 'redux';
+<pre><code>import { enableBatching } from 'redux-batched-actions';
+import { createStore, combineReducers} from 'redux';
+import {setAddress, setStore} from 'two-way-rest';
 import rootReducer from './reducers/index';
-const store = createStore(rootReducer);
+
+//We setup the address for backend ajax queries
+setAddress('http://remoteurl.com');
+
+const store = createStore(
+    enableBatching(combineReducers(rootReducer))
+);
+//We send two-way-rest an exact copy of the store
+setStore(store);
+
 ReactDOM.render(
   &lt;Provider store={store}&gt;
     &lt;MyRootComponent /&gt;
@@ -1059,11 +1075,6 @@ ReactDOM.render(
 </code></pre><br />
 <em>Although the two-way-rest plugin does not need the combineReducers function from redux, it does require the same state reducer format:</em><br />
 <pre><code>fullState = {reducerName_1: reducerState_1, ...}
-</code></pre></p>
-<p>We also have to setup the address for backend ajax queries, and send it the store so we&rsquo;ll add this:<br />
-<pre><code>import {setAddress, setStore} from 'two-way-rest';
-setAddress('http://remoteurl.com');
-setStore(store);
 </code></pre></p>
 <h4 id="once-the-initial-setup-is-complete-were-free-to-do-a-little-more-setup"><a name="user-content-once-the-initial-setup-is-complete-were-free-to-do-a-little-more-setup" href="#once-the-initial-setup-is-complete-were-free-to-do-a-little-more-setup" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Once the initial setup is complete, we’re free to do a little more setup…</h4>
 <p>In order for these special forms to work, we need to create a parent component to hold them.<br />
@@ -1090,16 +1101,15 @@ We need to make certain the state is an immutable map object, so the twoWayRestS
 <h3 id="rest-expectations"><a name="user-content-rest-expectations" href="#rest-expectations" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>REST Expectations</h3>
 <p>Index: Returns an array<br />
 Everything else: Returns an object<br />
-Errors: Object with an errors property</p>
+Errors: Object with an errors property  </p>
 <h3 id="component-actioncycle"><a name="user-content-component-actioncycle" href="#component-actioncycle" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Component Actioncycle</h3>
 <p>All two-way-rest components have the same actioncycle that can be tapped into by declaring function using the prop of the appropriate name</p>
 <p>callforward&ndash;&gt;<br />
 defaultAction&ndash;&gt;<br />
 onSuccessCB || onFailureCB&ndash;&gt;<br />
 callback</p>
-<p>These functions are wrapped in bluebird&rsquo;s Promise.Method, so they accept promises. </p>
-<p>They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. </p>
-<p>The args Map:<br />
+<p>These functions are wrapped in bluebird&rsquo;s Promise.Method, so they accept promises. They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. </p>
+<p><strong>The args Map:</strong><br />
 reducer: <string> name of reducer<br />
 tree: <List:Immutable> frontend/backend location of instance<br />
 outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)<br />
@@ -1110,8 +1120,6 @@ callforward: <function><br />
 callback: <function><br />
 onSuccessCB: <function><br />
 onFailureCB: <function><br />
-onSuccess: <object> passed to instance on success<br />
-onFailure: <object> passed to instance on failure<br />
 upload: <boolean> is one of the fields in the component a file field<br />
 force: <boolean> should a component refire its standard ajax call everytime it is updated<br />
 parent: <boolean> true for CreateChildComponents<br />
@@ -1119,22 +1127,43 @@ id: <string> declared using this.props.id, forces a create component to use the 
 twr: <Component> the component itself<br />
 response: <object | array> declared using this.props.response, skips ajax call and returns response<br />
 dispatch: <function> disptach function<br />
-getState: <getState> getState function</p>
+getState: <getState> getState function  </p>
+<h3 id="twrcomponent-optimization-and-frontend-database-use"><a name="user-content-twrcomponent-optimization-and-frontend-database-use" href="#twrcomponent-optimization-and-frontend-database-use" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>TWRComponent Optimization And Frontend Database use</h3>
+<p>TWRComponents are pure functional components that rely entirely on their props for their output. This is especially important because if a value is used in a TWR component that is not passed in from a prop, the component will fail to update on changes to that value, unless the forceUpdate prop is set to true.</p>
+<p>The frontend relational database posed a problem to the pure functional component. Because the entire reducer state is connected to each component, every component should technically be updating whenever the state is changed. This is obviously a needless drag on the system, so instead each component looks for changes within specific tables in the state. Unfortunately, because we are using a frontend relational database, it&rsquo;s difficult to know exactly which parts of the database each component relies on. The solution to this issue was to provide a <em>gex</em> function to every TWRComponent. The gex function is a simple query function that registers which tables in a state are being called on. This information is used by the component, and all of the parent TWRComponents to know when to update.</p>
+<p><pre><code>&lt;TWRShow tree='parent/q'&gt;
+    &lt;TWRShow tree='users/1' replace={(user_1)=&gt;{
+        const childrenBelongingToUser_1 = user_1.gex(['children'], user_1.instance())
+    }}
+
+    or
+
+    &lt;TWRShow tree='users/1' replace={(user_1)=&gt;{
+        const returnASingleObjectIfHasOneRelationship = user_1.gex(['child', 'name'], user_1.instance())
+    }}
+    or
+    &lt;TWRShow tree='users/1' replace={(user_1)=&gt;{
+        const allChildrenInState = user_1.gex('children')
+    }}
+&lt;/TWRShow&gt;
+</code></pre><br />
+*In the above example, the TWRShow component would know to update when the users table or children changed. The parent TWRshow component would also know to update. </p>
 <h1 id="usage"><a name="user-content-usage" href="#usage" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Usage</h1>
-<p><em>For a working example, please checkout the two-way-rest-boilerplate</em></p>
+<p><em>For a working example, please checkout the two-way-rest-boilerplate</em><br />
+<a href="http://github.com/l2silver/two-way-rest-boilerplate">http://github.com/l2silver/two-way-rest-boilerplate</a></p>
 <h1 id="component-properties"><a name="user-content-component-properties" href="#component-properties" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Component Properties</h1>
 <p><pre><code>&lt;TWR* properties...&gt;
 </code></pre><br />
 <strong>tree</strong><br />
-type: Array<br />
+type: string<br />
 purpose: the backend and frontend location of where a TWR component will act<br />
 example_1: <br />
-<pre><code>['users', '1'] (used for updates/destructions of a specific instance)  
+<pre><code>&lt;TWRShow tree='users/1' &gt; ==&gt; used for updates/destructions of a specific instance  
 == 'http://remoteurl/users/1' (backend) 
 == reducerState.immutable = {users: {1: {id: 1, name: 'joe'}}} (frontend)
 </code></pre></p>
 <p>example_2: <br />
-<pre><code>['users'] (used for create/index of a specific instance)  
+<pre><code>&lt;TWRShow tree='users' &gt; ==&gt; used for create/index of a specific instance
 == 'http://remoteurl/users' (backend) 
 == reducerState.immutable = {users: {...the results of a create/index} (frontend)
 </code></pre></p>
@@ -1147,32 +1176,26 @@ example_1: <br />
 removes rest words like index, edit, and create from the end of a url)
 </code></pre></p>
 <p><strong>instance</strong><br />
-type: immutable object with tree and _globeTWR property<br />
+type: immutable object with tree property<br />
 purpose: the frontend representation of a backend object<br />
 example_1: <br />
-<pre><code>&lt;TWRShow tree={['users', '1']}&gt; ==&gt; sends its children an 
+<pre><code>&lt;TWRShow tree='users/1'&gt; ==&gt; sends its children an 
     instance prop of the get response to http://remoteUrl/users/1
 &lt;TWRUpdate instance={ this.props.instance} /&gt; ==&gt; uses the 
-    instance prop's tree set the tree of the component 
-</code></pre><br />
-example_2:<br />
-<pre><code>this.props.instance.gex('children') ==&gt; an array of child instances
-</code></pre></p>
-<p>example_3:<br />
-<pre><code>this.props.instance.gex('child') ==&gt; a child instance
+    instance prop's tree to set the tree of the component 
 </code></pre></p>
 <p><strong>outTree</strong><br />
-type: Array<br />
+type: string<br />
 purpose: change the frontend location of where the results should be merged with.<br />
 example_1: <br />
-<pre><code>&lt;TWRShow tree={['users', '1']} outTree={{'users', '2'}}&gt; ==&gt; Get the user 1 backend
+<pre><code>&lt;TWRShow tree='users/1' outTree='users/2'&gt; ==&gt; Get the user 1 backend
 instance and replace the user 2 frontend instance with it
 </code></pre></p>
 <p><strong>replace</strong><br />
 type: Function<br />
 purpose: replace the component&rsquo;s DOM with a new DOM that has access to all of the component&rsquo;s functions<br />
 example_1: <br />
-<pre><code>&lt;TWRShow tree={['users', '1']} replace={(user_1)=&gt;{
+<pre><code>&lt;TWRShow tree='users/1' replace={(user_1)=&gt;{
     console.log(user_1.instance(), 'returns the frontend instance')
     return &lt;p&gt;{user_1.instance().get('name')}&lt;/p&gt;
 }}
@@ -1181,7 +1204,7 @@ example_1: <br />
 type: Function<br />
 purpose: return a custom reducer function that takes the reducer state as an argument and returns a new reducer state<br />
 example_1: <br />
-<pre><code>&lt;TWRShow tree={['users', '1']} replace={(user_1)=&gt;{
+<pre><code>&lt;TWRShow tree='users/1' replace={(user_1)=&gt;{
     return &lt;TWRCreate onClick={()=&gt;{
         user_1.custom((state)=&gt;state.set('name', 'Example'))
     }} /&gt; 
@@ -1191,7 +1214,7 @@ example_1: <br />
 type: Function<br />
 purpose: an action creator for custom functions<br />
 example_1: <br />
-<pre><code>&lt;TWRUpdate tree={['users', '1']} callforward={(args)=&gt;{
+<pre><code>&lt;TWRUpdate tree='users/1' callforward={(args)=&gt;{
     args.get('dispatch')(
         args.get('twr').customAction(
             (state)=&gt;state.set('name', 'Example')
@@ -1199,4 +1222,38 @@ example_1: <br />
     return args
 
 }} /&gt;
+</code></pre><br />
+<strong>forceRender</strong><br />
+type: boolean<br />
+purpose: by default, the index and show components will only render the children if their instances exist. When forceRender is true, those components will render their children no matter what.<br />
+example_1: <br />
+<pre><code>&lt;TWRShow forceRender='true' tree='users/1' &gt;
+    &lt;p&gt;I show no matter what! &lt;/p&gt;
+&lt;/TWRShow&gt;
+</code></pre><br />
+<strong>forceUpdate</strong><br />
+type: boolean<br />
+purpose: by default, components will only update if their props change, or if the state changes. If the force update property is set, TWRComponents will always update<br />
+example_1: <br />
+<pre><code>var x = 1
+&lt;TWRShow forceUpdate='true' tree='users/1' &gt;
+    &lt;p&gt;{x}&lt;/p&gt;
+&lt;/TWRShow&gt;
+x += 1
+</code></pre></p>
+<p><strong>force</strong><br />
+type: boolean<br />
+purpose: the index and show components will only fire a network request once per instance in the same reducer state. To fire everytime a component is mounted, set force to true.<br />
+example_1: <br />
+<pre><code>&lt;TWRShow force='true' tree='users/1' &gt;
+    &lt;p&gt;A new network request everytime the component is mounted&lt;/p&gt;
+&lt;/TWRShow&gt;
+</code></pre></p>
+<p><strong>tag</strong><br />
+type: string<br />
+purpose: change the element wrapping a TWR component to specific tag<br />
+example_1: <br />
+<pre><code>&lt;TWRShow tag='div' tree='users/1' &gt;
+    &lt;/p&gt;
+&lt;/TWRShow&gt; =&gt; &lt;div&gt;&lt;p /&gt;&lt;/div&gt;
 </code></pre></p></article></body></html>

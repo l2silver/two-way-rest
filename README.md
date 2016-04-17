@@ -2,6 +2,9 @@
 
 A lot of things, but more specifically a react-redux plugin that facilitates changes to the state and backend data sources.
 
+[![build status](https://travis-ci.org/l2silver/two-way-rest.svg?style=flat-square)](https://travis-ci.org/l2silver/two-way-rest)
+
+
 Example:
 ```
 <TWRCreate tree=‘users’>
