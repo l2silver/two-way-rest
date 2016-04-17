@@ -124,7 +124,7 @@ callback
 
 These functions are wrapped in bluebird's Promise.Method, so they accept promises. They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. 
 
-The args Map:
+__The args Map:__  
 reducer: <string> name of reducer  
 tree: <List:Immutable> frontend/backend location of instance  
 outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)  
@@ -196,9 +196,9 @@ example_2:
 == reducerState.immutable = {users: {...the results of a create/index} (frontend)
 ```
 
-__location__
-type: string url
-purpose: parsed to find the tree of an instance
+__location__  
+type: string url  
+purpose: parsed to find the tree of an instance  
 example_1: 
 ```
 <TWRShow location='/admin/users/1/edit' > ==> tree = ['users', '1'] 
@@ -262,7 +262,7 @@ example_1:
 	return args
 	
 }} />
-
+```
 __forceRender__  
 type: boolean  
 purpose: by default, the index and show components will only render the children if their instances exist. When forceRender is true, those components will render their children no matter what.  
