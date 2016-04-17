@@ -10,7 +10,6 @@ exports.substateCreateCreator = substateCreateCreator;
 exports.create = create;
 exports.update = update;
 exports.destroy = destroy;
-exports.getId = getId;
 exports.createFront = createFront;
 exports.updateFront = updateFront;
 exports.destroyFront = destroyFront;
@@ -53,133 +52,109 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 var customAction = exports.customAction = actions.custom;
 
 function coreGET(args, type) {
-	return function (dispatch, getState) {
-		if (getState()[args.get('reducer')].getIn(componentHelpers[type + 'Check'](args.get('tree')))) {
-			if (!args.get('force')) {
-				return true;
-			}
+	if (args.get('getState')()[args.get('reducer')].getIn(componentHelpers[type + 'Check'](args.get('tree')))) {
+		if (!args.get('force')) {
+			return true;
 		}
-		dispatch(actions.setAction(args.get('reducer'), componentHelpers[type + 'Check'](args.get('tree'))));
-		return (0, _creatorsHelpers.callforwardCreator)(args.mergeDeep({ dispatch: dispatch, getState: getState })).then(function (args) {
-			return (0, _creatorsHelpers.getType)(args).then(function (response) {
-				console.log('response' + type, response);
-				if (response.hasOwnProperty('errors')) {
-					throw response;
-				}
-				dispatch(actions[type + 'Action'](args.get('reducer'), args.get('tree'), response));
-				return (0, _creatorsHelpers.onSuccessCBCreator)(args.set('response', response));
-			}).catch(function (response) {
-				console.log('errors', response);
-				dispatch(actions.createErrorAction(args.get('reducer'), args.get('tree'), args.get('content'), response, args.postContent));
-				return (0, _creatorsHelpers.onFailureCBCreator)(args.set('response', response));
-			}).then(function (args) {
-				return (0, _creatorsHelpers.callbackCreator)(args);
-			});
+	}
+	args.get('dispatch')(actions.setAction(args.get('reducer'), componentHelpers[type + 'Check'](args.get('tree'))));
+	return (0, _creatorsHelpers.callforwardCreator)(args).then(function (args) {
+		return (0, _creatorsHelpers.getType)(args).then(function (response) {
+			console.log('response' + type, response);
+			if (response.hasOwnProperty('errors')) {
+				throw response;
+			}
+			args.get('dispatch')(actions[type + 'Action'](args.get('reducer'), args.get('tree'), response));
+			return (0, _creatorsHelpers.onSuccessCBCreator)(args.set('response', response));
+		}).catch(function (response) {
+			console.log('errors', response);
+			args.get('dispatch')(actions.createErrorAction(args.get('reducer'), args.get('tree'), args.get('content'), response, args.postContent));
+			return (0, _creatorsHelpers.onFailureCBCreator)(args.set('response', response));
+		}).then(function (args) {
+			return (0, _creatorsHelpers.callbackCreator)(args);
 		});
-	};
+	});
 }
 
 function substateDeleteCreator(args) {
-	return function (dispatch, getState) {
-		var content = (0, _creatorsHelpers.getContent)(args.get('form'));
-		return dispatch(actions.substateDeleteAction(args.get('reducer'), args.get('tree'), content.toJS()));
-	};
+	var content = (0, _creatorsHelpers.getContent)(args.get('form'));
+	return args.get('batchDispatch')(actions.substateDeleteAction(args.get('reducer'), args.get('tree'), content.toJS()));
 }
 
 function substateCreateCreator(args) {
-	return function (dispatch, getState) {
-		var content = (0, _creatorsHelpers.getContent)(args.get('form')).mergeDeep(args.get('content'));
-		return dispatch(actions.substateCreateAction(args.get('reducer'), args.get('tree'), content.toJS()));
-	};
+	var content = (0, _creatorsHelpers.getContent)(args.get('form')).mergeDeep(args.get('content'));
+	return args.get('batchDispatch')(actions.substateCreateAction(args.get('reducer'), args.get('tree'), content.toJS()));
 }
 
 function create(args) {
-	return function (dispatch, getState, store) {
-		function responsePromise(args) {
-			return (0, _creatorsHelpers.postRequestCreator)(args, function (args) {
-				return (0, _fetch.post)(args.get('path'), args.get('combinedContent').toJS());
-			}).then(function (response) {
-				return (0, _creatorsHelpers.responseCreator)(response, args, function (args) {
-					return args.update('outTree', function (outTree) {
-						return outTree.push(response.id.toString());
-					});
-				});
-			});
-		}
-		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'create' }).set('store', store);
-		return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
-	};
-}
 
-function update(args) {
-	return function (dispatch, getState) {
-		function responsePromise(args) {
-			return (0, _creatorsHelpers.postRequestCreator)(args, function (args) {
-				return (0, _fetch.put)(args.get('path'), args.get('combinedContent').toJS());
-			}).then(function (response) {
-				return (0, _creatorsHelpers.responseCreator)(response, args);
-			});
-		}
-		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'update' });
-		return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
-	};
-}
-
-function destroy(args) {
-	return function (dispatch, getState) {
-		function responsePromise(args) {
-			return (0, _creatorsHelpers.postRequestCreator)(args, function (args) {
-				return (0, _fetch.del)(args.get('path'));
-			}).then(function (response) {
-				return (0, _creatorsHelpers.responseCreator)(response, args);
-			});
-		}
-		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'destroy' });
-		return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
-	};
-}
-
-function getId(args) {
-	if (args.get('id')) {
-		return args.get('id');
-	}
-	return componentHelpers.createId();
-}
-
-function createFront(args) {
-	return function (dispatch, getState) {
-		function responsePromise(args) {
-			var newId = getId(args);
-			var response = { id: newId };
+	function responsePromise(args) {
+		return (0, _creatorsHelpers.postRequestCreator)(args, function (args) {
+			return (0, _fetch.post)(args.get('path'), args.get('combinedContent').toJS());
+		}).then(function (response) {
 			return (0, _creatorsHelpers.responseCreator)(response, args, function (args) {
 				return args.update('outTree', function (outTree) {
 					return outTree.push(response.id.toString());
 				});
 			});
-		}
-		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'create' });
-		return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
-	};
+		});
+	}
+	var nextArgs = args.merge({ type: 'create' });
+	return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
+}
+
+function update(args) {
+	function responsePromise(args) {
+		return (0, _creatorsHelpers.postRequestCreator)(args, function (args) {
+			return (0, _fetch.put)(args.get('path'), args.get('combinedContent').toJS());
+		}).then(function (response) {
+			return (0, _creatorsHelpers.responseCreator)(response, args);
+		});
+	}
+	var nextArgs = args.merge({ type: 'update' });
+	return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
+}
+
+function destroy(args) {
+	function responsePromise(args) {
+		return (0, _creatorsHelpers.postRequestCreator)(args, function (args) {
+			return (0, _fetch.del)(args.get('path'));
+		}).then(function (response) {
+			return (0, _creatorsHelpers.responseCreator)(response, args);
+		});
+	}
+	var nextArgs = args.merge({ type: 'destroy' });
+	return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
+}
+
+function createFront(args) {
+	function responsePromise(args) {
+		var newId = (0, _creatorsHelpers.getId)(args);
+		var response = { id: newId };
+		return (0, _creatorsHelpers.responseCreator)(response, args, function (args) {
+			return args.update('outTree', function (outTree) {
+				return outTree.push(response.id.toString());
+			});
+		});
+	}
+	var nextArgs = args.merge({ type: 'create' });
+	return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
 }
 
 function updateFront(args) {
-	return function (dispatch, getState) {
-		function responsePromise(args) {
-			return (0, _creatorsHelpers.responseCreator)({}, args);
-		}
-		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'update' });
-		return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
-	};
+	function responsePromise(args) {
+		return (0, _creatorsHelpers.responseCreator)({}, args);
+	}
+	var nextArgs = args.merge({ type: 'update' });
+	return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
 }
 
 function destroyFront(args) {
-	return function (dispatch, getState) {
-		function responsePromise(args) {
-			return (0, _creatorsHelpers.responseCreator)({}, args);
-		}
-		var nextArgs = args.merge({ dispatch: dispatch, getState: getState, type: 'destroy' });
-		return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
-	};
+	function responsePromise(args) {
+		return (0, _creatorsHelpers.responseCreator)({}, args);
+	}
+	var nextArgs = args.merge({ type: 'destroy' });
+	return (0, _creatorsHelpers.endPromises)((0, _creatorsHelpers.createEventTrain)([_creatorsHelpers.combineContent, _creatorsHelpers.callforwardCreator, responsePromise])(nextArgs));
 }
 
 function index(args) {

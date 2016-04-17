@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 exports.getType = exports.arrayRegexUnGreed = exports.arrayRegex = undefined;
+exports.getId = getId;
 exports.getBrackets = getBrackets;
 exports.getMergeInList = getMergeInList;
 exports.convertToArrayIf = convertToArrayIf;
@@ -46,12 +47,21 @@ var _i = require('i');
 
 var _i2 = _interopRequireDefault(_i);
 
+var _reduxBatchedActions = require('redux-batched-actions');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 var arrayRegex = exports.arrayRegex = /(\[.*\])/g;
 var arrayRegexUnGreed = exports.arrayRegexUnGreed = /(\[.*?\])/;
+
+function getId(args) {
+	if (args.get('id')) {
+		return args.get('id');
+	}
+	return componentHelpers.createId();
+}
 
 function getBrackets(name, list) {
 	var bracketMatch = name.match(arrayRegexUnGreed);
@@ -142,7 +152,9 @@ function callforwardCreator(args) {
 }
 
 function callbackCreator(args) {
-	return calls(args, 'callback');
+	return calls(args, 'callback').then(function () {
+		return args.get('batchDispatch')((0, _reduxBatchedActions.batchActions)(args.get('dispatchList')));
+	});
 }
 
 function onSuccessCBCreator(args) {

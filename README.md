@@ -4,7 +4,7 @@ A lot of things, but more specifically a react-redux plugin that facilitates cha
 
 Example:
 ```
-<TWRCreate tree={[‘users’]}>
+<TWRCreate tree={‘users’}>
  <input type=’text’ name=’name’ />
  <input type=’submit’ />
 </TWRCreate>
@@ -20,8 +20,8 @@ Suppose that instead of creating a user, you wanted to update a user
 ```
 Again, if successful, the form updates both the frontend and the backend. 
 
-*A user instance is simply a regular user object with a special tree property:*  
-{id: 1, name: ‘Joe’, **tree: [‘users’, 1]**}
+*A user instance is simply a immutable user object with a special tree property:*  
+Map {id: 1, name: ‘Joe’, **tree: List [‘users’, 1]**}
 
 Suppose that instead of updating a user’s frontend and backend, you just wanted to update the frontend.
 
@@ -34,8 +34,11 @@ Suppose that instead of updating a user’s frontend and backend, you just wante
 Now your frontend user has a new property(or updates an old property) called visible, and its value is true. 
 
 ## Motivation:
+I'm from the trenches. I build relatively simple websites for small businesses, where the priority is stability and development speed. When I started working with redux, I loved the structure, but hated the steps. Something as simple as toggling a button meant changing the react component, the action creator and the reducer. I built two-way-rest to expedite this process.
 
-I'm from the trenches. I build relatively simple websites for small businesses, where the priority is stability and development speed. When I started working with redux, I loved the structure, but hated the steps. Something as simple as toggling a button meant changing the react component, the action creator and the reducer. This process also meant extracting the code away from the react components, which felt counter intuitive, since one of the advantages of react is the code being visible while constructing the DOM. I built two-way-rest to solve these issues.
+## Fundamental Theory:
+There are two fundamental theories that power two-way-rest. The first is the idea that public functions that manipulate a database should have the same relative location as their frontend equivalents. The second, and the more crucial, is that information transmission should always be packaged in a key-value object, as opposed to just a value. The reason is because keys in key-value objects inuitively tell us the location of where a message should go. When these key-value objects are placed in a database which powers all of the logic in an application, they can, in many cases, eliminate the need to write code for receiving messages.
+
 
 ## Setup:
 
@@ -43,10 +46,12 @@ I'm from the trenches. I build relatively simple websites for small businesses, 
 React  
 Redux  
 React-Redux
+redux-batched-actions
 two-way-rest 
 
 Proper Setup Example.
 ```
+import { enableBatching } from 'redux-batched-actions';
 import { createStore, combineReducers} from 'redux';
 import {setAddress, setStore} from 'two-way-rest';
 import rootReducer from './reducers/index';
@@ -55,7 +60,7 @@ import rootReducer from './reducers/index';
 setAddress('http://remoteurl.com');
 
 const store = createStore(
-	combineReducers(rootReducer)
+	enableBatching(combineReducers(rootReducer))
 );
 //We send two-way-rest an exact copy of the store
 setStore(store);
@@ -141,6 +146,30 @@ response: <object | array> declared using this.props.response, skips ajax call a
 dispatch: <function> disptach function
 getState: <getState> getState function
 
+### TWRComponent Optimization And Frontend Database use
+TWRComponents are pure functional components that rely entirely on their props for their output. This is especially important because if a value is used in a TWR component that is not passed in from a prop, the component will fail to update on changes to that value, unless the forceUpdate prop is set to true.
+
+The frontend relational database posed a problem to the pure functional component. Because the entire reducer state is connected to each component, every component should technically be updating whenever the state is changed. This is obviously a needless drag on the system, so instead each component looks for changes within specific tables in the state. Unfortunately, because we are using a frontend relational database, it's difficult to know exactly which parts of the database each component relies on. The solution to this issue was to provide a *gex* function to every TWRComponent. The gex function is a simple query function that registers which tables in a state are being called on. This information is used by the component, and all of the parent TWRComponents to know when to update.
+
+```
+<TWRShow tree='parent/q'>
+	<TWRShow tree='users/1' replace={(user_1)=>{
+		const childrenBelongingToUser_1 = user_1.gex(['children'], user_1.instance())
+	}}
+
+	or
+
+	<TWRShow tree='users/1' replace={(user_1)=>{
+		const returnASingleObjectIfHasOneRelationship = user_1.gex(['child', 'name'], user_1.instance())
+	}}
+	or
+	<TWRShow tree='users/1' replace={(user_1)=>{
+		const allChildrenInState = user_1.gex('children')
+	}}
+</TWRShow>
+```
+*In the above example, the TWRShow component would know to update when the users table would changed, and when the children table would change. The parent TWRshow component would also know to update. 
+
 
 # Usage
 *For a working example, please checkout the two-way-rest-boilerplate*
@@ -185,16 +214,7 @@ example_1:
 <TWRShow tree='users/1'> ==> sends its children an 
 	instance prop of the get response to http://remoteUrl/users/1
 <TWRUpdate instance={ this.props.instance} /> ==> uses the 
-	instance prop's tree set the tree of the component 
-```
-example_2:  
-```
-this.props.instance.gex('children') ==> an array of child instances
-```
-
-example_3:  
-```
-this.props.instance.gex('child') ==> a child instance
+	instance prop's tree to set the tree of the component 
 ```
 
 __outTree__
@@ -251,6 +271,17 @@ example_1:
 <TWRShow forceRender='true' tree='users/1' >
 	<p>I show no matter what! </p>
 </TWRShow>
+```
+__forceUpdate__
+type: boolean
+purpose: by default, components will only update if their props change, or if the state changes. If the force update property is set, TWRComponents will always update
+example_1: 
+```
+var x = 1
+<TWRShow forceUpdate='true' tree='users/1' >
+	<p>{x}</p>
+</TWRShow>
+x += 1
 ```
 
 __force__

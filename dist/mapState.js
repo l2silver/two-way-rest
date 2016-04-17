@@ -9,8 +9,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 exports.createTree = createTree;
-exports.checkTWREntries = checkTWREntries;
-exports.orderedMap = orderedMap;
+exports.createOrderedMap = createOrderedMap;
 exports.idArray = idArray;
 exports.wrapMapState = wrapMapState;
 exports.checklistWithId = checklistWithId;
@@ -32,81 +31,14 @@ function createTree(k) {
 	return (0, _immutable.List)([k]);
 }
 
-function checkTWREntries(_globe, _firstInstance, _tree) {
-	var startTime = new Date().getTime();
+function createOrderedMap(children) {
 	try {
-		var _lastInstance = _tree.reduce(function (_previousInstance, _entry, _index, array) {
-			if (_previousInstance) {
-				var _instanceTWR = _previousInstance.get(_entry + 'TWR');
-				if (_instanceTWR) {
-					var _ret = function () {
-						var pluralEntry = _entry.pluralize.toString();
-						if (_immutable.List.isList(_instanceTWR)) {
-							var _orderedMap = _instanceTWR.reduce(function (orderedMap, id) {
-								var _globeInstance = _globe.getIn([_entry.toString(), id.toString()]);
-								if (_globeInstance && !_globeInstance.get('deleted_at')) {
-									return orderedMap.set(id.toString(), _globeInstance.asMutable().set('_globeTWR', _globe).set('tree', (0, _immutable.List)([pluralEntry, id.toString()])).asImmutable());
-								}
-								return orderedMap;
-							}, (0, _immutable.OrderedMap)());
-							return {
-								v: _orderedMap
-							};
-						}
-						var _globeInstance = _globe.getIn([pluralEntry, _instanceTWR.toString()]);
-						if (_globeInstance) {
-							return {
-								v: _globeInstance.asMutable().set('_globeTWR', _globe).set('tree', (0, _immutable.List)([pluralEntry, _instanceTWR.toString()])).asImmutable()
-							};
-						}
-						return {
-							v: undefined
-						};
-					}();
-
-					if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-				}
-				var _nextInstance = _previousInstance.get(_entry.toString());
-				return _nextInstance;
-			}
-			return _previousInstance;
-		}, _firstInstance);
-		return _lastInstance;
-	} catch (e) {
-		console.log('Error in checkTWREntries', e);
-	}
-}
-
-_immutable.Map.prototype.gex = function (k, notSetValue) {
-	try {
-		var _globe = this.get('_globeTWR');
-		var _tree = createTree(k);
-		if (_globe) {
-			return checkTWREntries(_globe, this, _tree);
-		}
-		var _firstInstance = this.get(_tree.first());
-		if (_firstInstance && _firstInstance.get) {
-			var _foundGlobe = _firstInstance.get('_globeTWR');
-			if (_foundGlobe) {
-				return checkTWREntries(_foundGlobe, this, _tree);
-			}
-		}
-		if (this.getIn(k)) {
-			return this.getIn(k);
-		}
-
-		throw '_globeTWR must be defined';
-	} catch (e) {
-		console.log('Error in Gex', e);
-		throw e;
-	}
-};
-
-function orderedMap(children) {
-	try {
-		return children.reduce(function (orderedMap, child) {
+		//const startTime = new Date().getTime();
+		var orderedMap = children.reduce(function (orderedMap, child) {
 			return orderedMap.set(child.get('id').toString(), child);
 		}, (0, _immutable.OrderedMap)());
+		//console.log('orderedMapTime', new Date().getTime() - startTime);
+		return orderedMap;
 	} catch (e) {
 		console.log('orderedMap error', e, children);
 	}
@@ -126,32 +58,29 @@ function wrapMapState(js, tree) {
 	var globe = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
 
 	var startTime = new Date().getTime();
-	var nextState = mapState(_immutable.Map.isMap(js) || _immutable.List.isList(js) ? js : (0, _immutable.fromJS)(js), tree, (0, _immutable.Map)().asMutable());
+	var startGlobe = (0, _immutable.Map)().asMutable();
+	mapState(_immutable.Map.isMap(js) || _immutable.List.isList(js) ? js : (0, _immutable.fromJS)(js), tree, startGlobe);
 	//console.log('mapStateTime', new Date().getTime() - startTime);
-	return globe.mergeDeep(nextState.asImmutable());
+	return globe.mergeDeep(startGlobe.asImmutable());
 }
 
 function checklistWithId(js) {
 	return _immutable.List.isList(js) && js.first() && js.first().get && js.first().get('id');
 }
 
-/*
-
-What does the mapState function do.
-
-It takes a regularJS object, converts it to an immutableObject, and changes relational data 
-
-*/
-
 function mapState(js, tree) {
 	var globe = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
 
 	try {
 		if ((typeof js === 'undefined' ? 'undefined' : _typeof(js)) !== 'object' || js === null) {
+			return true;
 			return globe.setIn(tree, js);
 		}
 		if (checklistWithId(js)) {
-			return addToGLobe(orderedMap(js), tree, globe);
+
+			var orderedMap = createOrderedMap(js);
+
+			return addToGLobe(orderedMap, tree, globe);
 		}
 		return addToGLobe(js, tree, globe);
 	} catch (e) {
@@ -173,10 +102,10 @@ function addToGLobe(js, tree, globe) {
 
 			return [k, createMapObject(k, v, tree)];
 		}).reduce(function (globes, mapObject) {
-			if (globes && !mapObject.get('skip')) {
+			if (!mapObject.skip) {
 				try {
-					var initialGlobe = createInitialGlobe(globes, mapObject);
-					return createNextGlobe(initialGlobe, mapObject);
+					createInitialGlobe(globe, mapObject);
+					createNextGlobe(globe, mapObject);
 				} catch (e) {
 					console.log('error in reduce addToGLobe', e, e.lineNumber);
 				}
@@ -189,41 +118,41 @@ function addToGLobe(js, tree, globe) {
 }
 
 function createMapObject(k, js, tree) {
-	var random = Math.floor(Math.random() * 100 + 1);
 	try {
-		if (k == 'tree' || k == '_globeTWR') {
-			return (0, _immutable.Map)({
+		if (k == 'tree') {
+			return {
 				skip: true
-			});
+			};
 		}
 		if (js && (typeof js === 'undefined' ? 'undefined' : _typeof(js)) === 'object') {
 			if (checklistWithId(js)) {
-				return (0, _immutable.Map)({
+				return {
 					thisTree: tree.push(k + 'TWR'),
 					nextTree: (0, _immutable.List)([k]),
-					nextObject: orderedMap(js),
+					nextObject: createOrderedMap(js),
 					thisObject: idArray(js)
-				});
+				};
 			}
 			if (js.get('id')) {
 				if (k != js.get('id')) {
-					return (0, _immutable.Map)({
+					return {
 						thisTree: tree.push(k + 'TWR'),
 						nextTree: (0, _immutable.List)([k.pluralize]),
-						nextObject: orderedMap((0, _immutable.List)([js])),
+						nextObject: createOrderedMap((0, _immutable.List)([js])),
 						thisObject: js.get('id').toString()
-					});
+					};
 				}
 			}
 		}
-		return (0, _immutable.Map)({
-			thisTree: tree.push(k),
+		var nextTree = tree.push(k);
+		return {
+			thisTree: nextTree,
 			thisObject: js,
-			nextTree: tree.push(k),
+			nextTree: nextTree,
 			nextObject: js
-		});
+		};
 	} catch (e) {
-		console.log(random, 'mapOBJECT error', e);
+		console.log('mapOBJECT error', e);
 		console.log('mapOBJECT js', js);
 		console.log('mapOBJECT k', k);
 	}
@@ -240,34 +169,21 @@ function recursiveSetInitialObject(globe, mapObject) {
 
 function createInitialGlobe(globes, mapObject) {
 	try {
-		if ((0, _immutable.is)(globes.getIn(mapObject.get('thisTree')), mapObject.get('thisObject'))) {
-			return globes;
-		}
-		var initialGlobe = recursiveSetInitialObject(globes, mapObject);
-		return initialGlobe;
+		var _initialGlobe = globes.setIn(mapObject.thisTree, mapObject.thisObject);
 	} catch (e) {
-		console.log('create initialGlobe error', e, mapObject.toJS(), globes.toJS(), globes.getIn(mapObject.get('thisTree')));
+		console.log('create initialGlobe error', e, mapObject, globes.toJS());
 	}
 }
-function createNextGlobe(initialGlobe, mapObject) {
+function createNextGlobe(globe, mapObject) {
 	try {
-		if (mapObject.get('nextObject')) {
-			if (mapObject.get('thisObject')) {
 
-				var nextGlobe = initialGlobe;
-				if (nextGlobe) {
-					var mergeWithGlobe = mapState(mapObject.get('nextObject'), mapObject.get('nextTree'), initialGlobe);
-					if (mergeWithGlobe) {
-						try {
-							return nextGlobe.mergeDeep(mergeWithGlobe);
-						} catch (e) {
-							return mergeWithGlobe.mergeDeep(nextGlobe);
-						}
-					}
+		if (mapObject.nextObject) {
+			if (mapObject.thisObject) {
+				if (globe) {
+					mapState(mapObject.nextObject, mapObject.nextTree, globe);
 				}
 			}
 		}
-		return initialGlobe;
 	} catch (e) {
 		console.log('Create Next Globe Error', e);
 		console.log('Create Next Globe Error', mapObject);
