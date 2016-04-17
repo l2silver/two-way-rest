@@ -33,11 +33,9 @@ function createTree(k) {
 
 function createOrderedMap(children) {
 	try {
-		//const startTime = new Date().getTime();
 		var orderedMap = children.reduce(function (orderedMap, child) {
 			return orderedMap.set(child.get('id').toString(), child);
 		}, (0, _immutable.OrderedMap)());
-		//console.log('orderedMapTime', new Date().getTime() - startTime);
 		return orderedMap;
 	} catch (e) {
 		console.log('orderedMap error', e, children);

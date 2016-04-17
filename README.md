@@ -135,8 +135,6 @@ callforward: <function>
 callback: <function>  
 onSuccessCB: <function>  
 onFailureCB: <function>  
-onSuccess: <object> passed to instance on success  
-onFailure: <object> passed to instance on failure  
 upload: <boolean> is one of the fields in the component a file field  
 force: <boolean> should a component refire its standard ajax call everytime it is updated  
 parent: <boolean> true for CreateChildComponents  
