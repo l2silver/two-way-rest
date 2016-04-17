@@ -1,6 +1,7 @@
 import {expect} from 'chai';
 import {setAddress} from './../lib/fetch';
 setAddress('http://localhost:2000');
+
 import {
 	getContent
 	, calls
@@ -22,7 +23,6 @@ import Promise from 'bluebird';
 import jsdom from 'jsdom';
 import nock from 'nock';
 
-
 const responseObject = {
                   id: 1
                  }
@@ -35,6 +35,9 @@ nock('http://localhost:2000')
                 .post('/tests_error')
                 .reply(200, {errors: 'Something went wrong'});
 
+
+const dispatchList = []
+const batchDispatch = ()=>{}
 
 describe('creators', ()=>{
 	const document = jsdom.jsdom(`<form id="testForm">
@@ -73,17 +76,10 @@ describe('creators', ()=>{
 	})
 	
 	describe('create', ()=>{
+		
 		it('success', (done)=>{
 			const content = Map({test: 'testValue'});
 			const path = '/tests'
-			const args = Map({
-				form,
-				tree,
-				reducer,
-				content,
-				path,
-				outTree: tree
-			})
 			function dispatch(action){
 				expect(action.verb).to.equal('CREATE');
 				expect(action.type).to.equal('test');
@@ -92,7 +88,20 @@ describe('creators', ()=>{
 				expect(action.tree).to.equal(args.get('tree'));
 				return done();
 			}
-			create(args)(dispatch);
+			
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path,
+				outTree: tree,
+				dispatch,
+				dispatchList,
+				batchDispatch
+			})
+			
+			create(args);
 		});
 		it('success parent', (done)=>{
 			const content = Map({test: 'testValue'});
@@ -104,7 +113,10 @@ describe('creators', ()=>{
 				content,
 				path,
 				outTree: tree,
-				parent: tree.shift().unshift('parents')
+				parent: tree.shift().unshift('parents'),
+				dispatch,
+				dispatchList,
+				batchDispatch
 			})
 			function dispatch(action){
 				expect(action.verb).to.equal('CREATE');
@@ -115,20 +127,12 @@ describe('creators', ()=>{
 				expect(action.parent).to.equal(args.get('tree').shift().unshift('parents'));
 				return done();
 			}
-			create(args)(dispatch);
+			create(args);
 		});
 		
 		it('dispatches createError', (done)=>{
 			const content = Map({test: 'testValue'});
 			const path = '/tests_error'
-			const args = Map({
-				form,
-				tree,
-				reducer,
-				content,
-				path,
-				outTree: tree
-			})
 			function dispatch(action){
 				expect(action.verb).to.equal('CREATE_ERROR');
 				expect(action.type).to.equal('test');
@@ -136,7 +140,19 @@ describe('creators', ()=>{
 				expect(action.response.errors).to.equal('Something went wrong');
 				return done();
 			}
-			create(args)(dispatch);
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path,
+				outTree: tree,
+				dispatch,
+				dispatchList,
+				batchDispatch
+			})
+			
+			create(args);
 		});
 	})
 	describe('coreGet', ()=>{
@@ -153,13 +169,6 @@ describe('creators', ()=>{
         
 
 		it('dispatches Set Index', (done)=>{			
-			const path = '/tests'
-			const args = Map({
-				form,
-				tree,
-				reducer,
-				path
-			})
 			const state = {test: Map()}
 			function getState(){
 				return state;
@@ -172,7 +181,19 @@ describe('creators', ()=>{
 				expect(action.type).to.equal('test');
 				expect(action.tree).to.equal(List(['testsTWRIndex']));
 			}
-			coreGET(args, 'index')(dispatch, getState).then(()=>{
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				path,
+				getState,
+				dispatch,
+				batchDispatch,
+				dispatchList
+			})
+			
+			coreGET(args, 'index').then(()=>{
 				return done();
 			});
 		});
@@ -180,13 +201,6 @@ describe('creators', ()=>{
 
 			const content = Map({test: 'testValue'});
 			const path = '/tests_error'
-			const args = Map({
-				form,
-				tree,
-				reducer,
-				content,
-				path
-			})
 			const state = {test: Map()}
 			function getState(){
 				return state;
@@ -201,20 +215,24 @@ describe('creators', ()=>{
 				expect(action.tree).to.equal(args.get('tree'));
 				expect(action.content).to.equal(content);
 			}
-			coreGET(args, 'index')(dispatch, getState).then(()=>{
-				return done();
-			});
-		});
-		it('dispatches Index', (done)=>{
-			const content = Map({test: 'testValue'});
-			const path = '/tests'
+
 			const args = Map({
 				form,
 				tree,
 				reducer,
 				content,
-				path
+				path,
+				getState,
+				dispatch,
+				batchDispatch,
+				dispatchList
 			})
+			
+			coreGET(args, 'index').then(()=>{
+				return done();
+			});
+		});
+		it('dispatches Index', (done)=>{
 			const state = {test: Map()}
 			function getState(){
 				return state;
@@ -228,7 +246,21 @@ describe('creators', ()=>{
 				expect(action.type).to.equal('test');
 				expect(action.tree).to.equal(args.get('tree'));
 			}
-			coreGET(args, 'index')(dispatch, getState).then(()=>{
+			const content = Map({test: 'testValue'});
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path,
+				getState,
+				dispatch,
+				batchDispatch,
+				dispatchList
+			})
+			
+			coreGET(args, 'index').then(()=>{
 				return done();
 			});
 		});
@@ -241,7 +273,21 @@ describe('creators', ()=>{
 			function dispatch(action){
 				return action;
 			}
-			expect(coreGET(args, 'index')(dispatch, getState)).to.be.truth;
+			const content = Map({test: 'testValue'});
+			const path = '/tests'
+			const args = Map({
+				form,
+				tree,
+				reducer,
+				content,
+				path,
+				getState,
+				dispatch,
+				batchDispatch,
+				dispatchList
+			})
+
+			expect(coreGET(args, 'index')).to.be.truth;
 		});
 	})
 });

@@ -8,6 +8,7 @@ exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.def
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 exports.setStore = setStore;
+exports.getStore = getStore;
 exports.urlPath = urlPath;
 exports.generateTree = generateTree;
 exports.getIndex = getIndex;
@@ -51,6 +52,9 @@ var i = (0, _i2.default)(true);
 var store;
 function setStore(newStore) {
 	store = newStore;
+}
+function getStore() {
+	return store;
 }
 function urlPath(tree) {
 	return '/' + tree.join('/');

@@ -30,7 +30,7 @@ const instance = Map({
 		})
 	}
 setStore( {dispatch: ()=>{}, getState: ()=>state })
-describe('components', ()=>{
+describe.skip('components', ()=>{
 	describe('TWRLink', ()=>{
 	  	it('has to address', ()=>{
 			const tree = sd.shallowRender(function() {

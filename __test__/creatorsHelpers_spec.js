@@ -40,6 +40,8 @@ describe('creatorsHelpers', ()=>{
 	const document = jsdom.jsdom(`<form id="testForm">
 		<input type="hidden" name="test" value="testValue" />
 	</form>`);
+	const dispatchList = []
+	const batchDispatch = ()=>{}
 	const form = document.getElementById('testForm');
 	const reducer = 'test';
 	const tree = List(['tests'])
@@ -48,7 +50,9 @@ describe('creatorsHelpers', ()=>{
 		form,
 		tree,
 		reducer,
-		content
+		content,
+		dispatchList,
+		batchDispatch
 	})
 	describe('calls', ()=>{
 		it('type exists', (done)=>{

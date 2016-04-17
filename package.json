@@ -1,6 +1,6 @@
 {
   "name": "two-way-rest",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Two-Way-Rest architecture for react-redux",
   "main": "dist/index.js",
   "scripts": {

@@ -67,7 +67,7 @@ describe('components_properties', ()=>{
 			const MComponent = genMock(defaultProperties ,{reducer: 'test'})
 			expect(MComponent.getTree({tree:'tests'})).to.equal(List(['tests']))
 		})
-		describe.only('gex', ()=>{
+		describe('gex', ()=>{
 			const instanceTest = fromJS({id: 1, fake_testsTWR: [1]})
 			const instanceFakeTest = fromJS({id: 1})
 			const state = {
@@ -114,8 +114,10 @@ describe('components_properties', ()=>{
 				MComponent.gex(['fake_tests', '1', 'id'], instanceTest)
 				expect(MComponent.getListTables()).to.equal(
 					Map ({ 
-						"tests": Map ({ "name": "tests", "reducer": "test" }),
-						"fake_tests": Map ({ "name": "fake_tests", "reducer": "test" })
+						Live: Map({
+							"tests": Map ({ "name": "tests", "reducer": "test" }),
+							"fake_tests": Map ({ "name": "fake_tests", "reducer": "test" })
+						})
 					})
 				)
 			})
@@ -125,8 +127,10 @@ describe('components_properties', ()=>{
 				MComponent.gex(['fake_tests'])
 				expect(MComponent.getListTables()).to.equal(
 					Map ({ 
-						"tests": Map ({ "name": "tests", "reducer": "test" }),
-						"fake_tests": Map ({ "name": "fake_tests", "reducer": "test" })
+						Live: Map({
+							"tests": Map ({ "name": "tests", "reducer": "test" }),
+							"fake_tests": Map ({ "name": "fake_tests", "reducer": "test" })
+						})
 					})
 				)
 			})
