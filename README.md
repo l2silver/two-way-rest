@@ -4,7 +4,7 @@ A lot of things, but more specifically a react-redux plugin that facilitates cha
 
 Example:
 ```
-<TWRCreate tree={‘users’}>
+<TWRCreate tree=‘users’>
  <input type=’text’ name=’name’ />
  <input type=’submit’ />
 </TWRCreate>
@@ -20,7 +20,7 @@ Suppose that instead of creating a user, you wanted to update a user
 ```
 Again, if successful, the form updates both the frontend and the backend. 
 
-*A user instance is simply a immutable user object with a special tree property:*  
+*A user instance is simply an immutable user object with a special tree property:*  
 Map {id: 1, name: ‘Joe’, **tree: List [‘users’, 1]**}
 
 Suppose that instead of updating a user’s frontend and backend, you just wanted to update the frontend.
@@ -110,9 +110,9 @@ Every globe has a Substate property which holds the intermittent state of an ins
 There are two types of two-way-rest components: Getters and Posters. Getters retrieve instances, and Posters mutate instances. Getters include index and show components, and Posters are creates, update, and destroy. Every component sends an instance of itself to the props.instance(s) of its children, however while Getters send the actual instance, Posters send a substate instance if it exists. (Substate instances are created on errors or successes )
 
 ### REST Expectations
-Index: Returns an array
-Everything else: Returns an object
-Errors: Object with an errors property
+Index: Returns an array  
+Everything else: Returns an object  
+Errors: Object with an errors property  
 
 ### Component Actioncycle
 All two-way-rest components have the same actioncycle that can be tapped into by declaring function using the prop of the appropriate name
@@ -125,26 +125,26 @@ callback
 These functions are wrapped in bluebird's Promise.Method, so they accept promises. They take a single parameter, args, which is an immutable Map object (from immutableJS), and must return an args Map with the same properties. 
 
 The args Map:
-reducer: <string> name of reducer
-tree: <List:Immutable> frontend/backend location of instance
-outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)
-path: <string> url starting from http://remoteurl.com/... (defaults to tree) + this.props.endPath <string> rest action like 'edit', 'show', etc.
-form: <DOM:element> the entire component element
-content: <Map:Immutable> this.props.content object
-callforward: <function>
-callback: <function>
-onSuccessCB: <function>
-onFailureCB: <function>
-onSuccess: <object> passed to instance on success
-onFailure: <object> passed to instance on failure
-upload: <boolean> is one of the fields in the component a file field
-force: <boolean> should a component refire its standard ajax call everytime it is updated
-parent: <boolean> true for CreateChildComponents
-id: <string> declared using this.props.id, forces a create component to use the declared id
-twr: <Component> the component itself
-response: <object | array> declared using this.props.response, skips ajax call and returns response
-dispatch: <function> disptach function
-getState: <getState> getState function
+reducer: <string> name of reducer  
+tree: <List:Immutable> frontend/backend location of instance  
+outTree: <List:Immutable> the frontend location for the response from the backend (defaults to tree)  
+path: <string> url starting from http://remoteurl.com/... (defaults to tree) + this.props.endPath <string> rest action like 'edit', 'show', etc.  
+form: <DOM:element> the entire component element  
+content: <Map:Immutable> this.props.content object  
+callforward: <function>  
+callback: <function>  
+onSuccessCB: <function>  
+onFailureCB: <function>  
+onSuccess: <object> passed to instance on success  
+onFailure: <object> passed to instance on failure  
+upload: <boolean> is one of the fields in the component a file field  
+force: <boolean> should a component refire its standard ajax call everytime it is updated  
+parent: <boolean> true for CreateChildComponents  
+id: <string> declared using this.props.id, forces a create component to use the declared id  
+twr: <Component> the component itself  
+response: <object | array> declared using this.props.response, skips ajax call and returns response  
+dispatch: <function> disptach function  
+getState: <getState> getState function  
 
 ### TWRComponent Optimization And Frontend Database use
 TWRComponents are pure functional components that rely entirely on their props for their output. This is especially important because if a value is used in a TWR component that is not passed in from a prop, the component will fail to update on changes to that value, unless the forceUpdate prop is set to true.
@@ -168,7 +168,7 @@ The frontend relational database posed a problem to the pure functional componen
 	}}
 </TWRShow>
 ```
-*In the above example, the TWRShow component would know to update when the users table would changed, and when the children table would change. The parent TWRshow component would also know to update. 
+*In the above example, the TWRShow component would know to update when the users table or children changed. The parent TWRshow component would also know to update. 
 
 
 # Usage
@@ -184,14 +184,14 @@ type: string
 purpose: the backend and frontend location of where a TWR component will act  
 example_1: 
 ```
-users/1' (used for updates/destructions of a specific instance)  
+<TWRShow tree='users/1' > ==> used for updates/destructions of a specific instance  
 == 'http://remoteurl/users/1' (backend) 
 == reducerState.immutable = {users: {1: {id: 1, name: 'joe'}}} (frontend)
 ```
 
 example_2: 
 ```
-'users' (used for create/index of a specific instance)  
+<TWRShow tree='users' > ==> used for create/index of a specific instance
 == 'http://remoteurl/users' (backend) 
 == reducerState.immutable = {users: {...the results of a create/index} (frontend)
 ```
@@ -207,8 +207,8 @@ removes rest words like index, edit, and create from the end of a url)
 ```
 
 __instance__
-type: immutable object with tree and _globeTWR property
-purpose: the frontend representation of a backend object
+type: immutable object with tree property  
+purpose: the frontend representation of a backend object  
 example_1: 
 ```
 <TWRShow tree='users/1'> ==> sends its children an 
@@ -217,9 +217,9 @@ example_1:
 	instance prop's tree to set the tree of the component 
 ```
 
-__outTree__
-type: string
-purpose: change the frontend location of where the results should be merged with.
+__outTree__  
+type: string  
+purpose: change the frontend location of where the results should be merged with.  
 example_1: 
 ```
 <TWRShow tree='users/1' outTree='users/2'> ==> Get the user 1 backend
@@ -227,8 +227,8 @@ instance and replace the user 2 frontend instance with it
 ```
 
 __replace__
-type: Function
-purpose: replace the component's DOM with a new DOM that has access to all of the component's functions
+type: Function  
+purpose: replace the component's DOM with a new DOM that has access to all of the component's functions  
 example_1: 
 ```
 <TWRShow tree='users/1' replace={(user_1)=>{
@@ -237,9 +237,9 @@ example_1:
 }}
 ```
 
-__custom__
-type: Function
-purpose: return a custom reducer function that takes the reducer state as an argument and returns a new reducer state
+__custom__  
+type: Function  
+purpose: return a custom reducer function that takes the reducer state as an argument and returns a new reducer state  
 example_1: 
 ```
 <TWRShow tree='users/1' replace={(user_1)=>{
@@ -249,9 +249,9 @@ example_1:
 }} />==> 
 ```
 
-__customAction__
-type: Function
-purpose: an action creator for custom functions
+__customAction__  
+type: Function  
+purpose: an action creator for custom functions  
 example_1: 
 ```
 <TWRUpdate tree='users/1' callforward={(args)=>{
@@ -263,18 +263,18 @@ example_1:
 	
 }} />
 
-__forceRender__
-type: boolean
-purpose: by default, the index and show components will only render the children if their instances exist. When forceRender is true, those components will render their children no matter what.
+__forceRender__  
+type: boolean  
+purpose: by default, the index and show components will only render the children if their instances exist. When forceRender is true, those components will render their children no matter what.  
 example_1: 
 ```
 <TWRShow forceRender='true' tree='users/1' >
 	<p>I show no matter what! </p>
 </TWRShow>
 ```
-__forceUpdate__
-type: boolean
-purpose: by default, components will only update if their props change, or if the state changes. If the force update property is set, TWRComponents will always update
+__forceUpdate__  
+type: boolean  
+purpose: by default, components will only update if their props change, or if the state changes. If the force update property is set, TWRComponents will always update  
 example_1: 
 ```
 var x = 1
@@ -284,9 +284,9 @@ var x = 1
 x += 1
 ```
 
-__force__
-type: boolean
-purpose: the index and show components will only fire a network request once per instance in the same reducer state. To fire everytime a component is mounted, set force to true.
+__force__  
+type: boolean  
+purpose: the index and show components will only fire a network request once per instance in the same reducer state. To fire everytime a component is mounted, set force to true.  
 example_1: 
 ```
 <TWRShow force='true' tree='users/1' >
@@ -294,13 +294,12 @@ example_1:
 </TWRShow>
 ```
 
-__tag__
-type: string
-purpose: change the element wrapping a TWR component to specific tag
+__tag__  
+type: string  
+purpose: change the element wrapping a TWR component to specific tag  
 example_1: 
 ```
 <TWRShow tag='div' tree='users/1' >
 	</p>
 </TWRShow> => <div><p /></div>
 ```
-
