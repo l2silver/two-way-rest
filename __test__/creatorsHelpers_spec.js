@@ -15,6 +15,7 @@ import {
 	, endPromises
 	, customCreator
 	, customAction
+	, flattenContent
 
 } from './../lib/creatorsHelpers';
 import {fromJS, Map, OrderedMap, Is, List, Seq} from 'immutable';
@@ -135,6 +136,20 @@ describe('creatorsHelpers', ()=>{
 			, combinedContent: Map({test: 'testValue'})
 			})
 		)
+	})
+	it('flattenContent', ()=>{
+		const args = Map({flattenContent: 'data/:id', tree: List(['123'])})
+		const combinedContent = Map({
+			data: Map({
+				123: Map({
+					name: 'z'
+				})
+			})
+		})
+		const flattenedContent = flattenContent(args, combinedContent)
+		expect(flattenedContent).to.equal(Map({
+					name: 'z'
+				}))
 	})
 
 	describe('endPromises', ()=>{
