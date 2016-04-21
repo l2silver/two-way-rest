@@ -155,40 +155,17 @@ var StupidTWRCreateFront = exports.StupidTWRCreateFront = _react2.default.create
 	}
 }).toJS());
 
-var StupidTWRCreateChild = exports.StupidTWRCreateChild = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
-	parent: function parent() {
-		return (0, _immutable.List)([this.props.instance.get('tree').first(), this.props.instance.get('tree').last()]);
-	},
-	getTree: function getTree(props) {
-		return (0, _immutable.List)([props.childName, this.getId()]);
-	},
+var StupidTWRCreateChild = exports.StupidTWRCreateChild = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge(_componentProperties.defaultCreateChildProperties).toJS());
+
+var StupidTWRCreateChildFront = exports.StupidTWRCreateChildFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge(_componentProperties.defaultCreateChildProperties).merge({
 	submitForm: function submitForm(event) {
 		var _this3 = this;
 
 		event.preventDefault();
 		var tree = this.props.instance.get('tree');
 		var parentInstanceName = tree.pop().last();
-		actionCreators.create((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
-			return content.set('id', _this3.getId()).set(parentInstanceName.singularize + '_id', _this3.props.instance.get('id').toString());
-		}));
-	}
-}).toJS());
-
-var StupidTWRCreateChildFront = exports.StupidTWRCreateChildFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
-	parent: function parent() {
-		return (0, _immutable.List)([this.props.instance.get('tree').first(), this.props.instance.get('tree').last()]);
-	},
-	getTree: function getTree(props) {
-		return (0, _immutable.List)([props.childName, this.getId()]);
-	},
-	submitForm: function submitForm(event) {
-		var _this4 = this;
-
-		event.preventDefault();
-		var tree = this.props.instance.get('tree');
-		var parentInstanceName = tree.pop().last();
 		actionCreators.createFront((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
-			return content.set('id', _this4.getId()).set(parentInstanceName.singularize + '_id', _this4.props.instance.get('id').toString());
+			return content.set('id', _this3.getId()).set(parentInstanceName.singularize + '_id', _this3.props.instance.get('id').toString());
 		}));
 	}
 }).toJS());
@@ -251,12 +228,12 @@ var StupidTWRBreadCrumbs = exports.StupidTWRBreadCrumbs = _react2.default.create
 		}
 	},
 	generateLinks: function generateLinks() {
-		var _this5 = this;
+		var _this4 = this;
 
 		var tree = (0, _componentProperties.getTree)(this.reducer()).toArray();
 		return tree.map(function (currentValue, index, originTree) {
 			if (index + 1 != originTree.length) {
-				return _this5.generateLink(currentValue, originTree, index);
+				return _this4.generateLink(currentValue, originTree, index);
 			}
 		});
 	},

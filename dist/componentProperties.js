@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostUpdateProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultIndexProperties = exports.defaultProperties = exports.getTree = undefined;
+exports.defaultGetProperties = exports.defaultPostCreateProperties = exports.defaultPostUpdateProperties = exports.defaultCreateChildProperties = exports.defaultPostProperties = exports.defaultCreateSubstate = exports.defaultPostRenderProperties = exports.defaultPostRenderClickProperties = exports.defaultGetRenderProperties = exports.defaultIndexProperties = exports.defaultProperties = exports.getTree = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -155,7 +155,8 @@ function createArgs(twr, form) {
 		dispatch: holdBatchDispatch.addDispatch,
 		getState: store.getState,
 		batchDispatch: store.dispatch,
-		dispatchList: holdBatchDispatch.getDispatchList()
+		dispatchList: holdBatchDispatch.getDispatchList(),
+		flattenContent: twr.props.flattenContent
 	});
 }
 
@@ -751,6 +752,32 @@ var defaultPostProperties = exports.defaultPostProperties = (0, _immutable.Map)(
 			return this.props.path;
 		}
 		return urlPath(this.tree().pop());
+	}
+});
+
+var defaultCreateChildProperties = exports.defaultCreateChildProperties = (0, _immutable.Map)({
+	parent: function parent() {
+		return (0, _immutable.List)([this.props.instance.get('tree').first(), this.props.instance.get('tree').last()]);
+	},
+	getTree: function getTree(props) {
+		return (0, _immutable.List)([props.childName, this.getId()]);
+	},
+	getTreeFromParent: function getTreeFromParent() {
+		try {
+			return this.props.instance.get('tree');
+		} catch (e) {
+			console.log('TWRCreateChild Error', 'cannot get tree from parent instance', e);
+		}
+	},
+	submitForm: function submitForm(event) {
+		var _this10 = this;
+
+		event.preventDefault();
+		var tree = this.getTreeFromParent();
+		var parentInstanceName = tree.pop().last();
+		actionCreators.create(createArgs(this, (0, _reactDom.findDOMNode)(this)).update('content', function (content) {
+			return content.set('id', _this10.getId()).set(parentInstanceName.singularize + '_id', _this10.props.instance.get('id').toString());
+		}));
 	}
 });
 
