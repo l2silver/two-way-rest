@@ -40,7 +40,10 @@ nock('http://localhost:2000')
 describe('creatorsHelpers', ()=>{
 	const document = jsdom.jsdom(`<form id="testForm">
 		<input type="hidden" name="test" value="testValue" />
-	</form>`);
+	</form>
+		<input type="hidden" id="testInput" name="test" value="testValue" />
+	`);
+
 	const dispatchList = []
 	const batchDispatch = ()=>{}
 	const form = document.getElementById('testForm');
@@ -71,6 +74,9 @@ describe('creatorsHelpers', ()=>{
 		})
 	})
 	describe('getContent', ()=>{
+		it('one input', ()=>{
+			expect(getContent(document.getElementById('testInput'))).to.equal(Map({test: 'testValue'}))
+		})
 		it('simple', ()=>{
 			expect(getContent(args.get('form'))).to.equal(Map({test: 'testValue'}))
 		})
