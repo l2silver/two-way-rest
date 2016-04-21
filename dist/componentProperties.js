@@ -396,6 +396,7 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	},
 	componentDidUpdate: function componentDidUpdate() {
 		this.context.listTables(this.getListTables());
+		this.resetFunction();
 	},
 	componentWillMount: function componentWillMount() {
 		var tableName = this.tree().first();
@@ -408,7 +409,6 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		this.childListTables = (0, _immutable.Map)().asMutable();
 	},
 	componentWillUpdate: function componentWillUpdate() {
-		this.resetFunction();
 		return this.checkTreeChange();
 	},
 	componentDidMount: function componentDidMount() {
