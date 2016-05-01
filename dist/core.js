@@ -27,12 +27,15 @@ var _componentHelpers = require('./componentHelpers');
 
 var _mapState = require('./mapState');
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function custom(state, fn) {
 	return fn(state);
 }
 
 function setGet(state, tree) {
-	return (0, _mapState.wrapMapState)(true, tree, state);
+	var nextState = (0, _mapState.wrapMapState)(_defineProperty({}, tree.last(), true), tree.pop(), state);
+	return nextState;
 }
 
 function index(state, tree, response) {

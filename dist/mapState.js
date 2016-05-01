@@ -8,6 +8,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+exports.gex = gex;
 exports.createTree = createTree;
 exports.createOrderedMap = createOrderedMap;
 exports.idArray = idArray;
@@ -23,6 +24,61 @@ exports.createNextGlobe = createNextGlobe;
 var _immutable = require('immutable');
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function gexTable(table) {
+	if (Array.isArray(table)) {
+		return table;
+	}
+	return [table];
+}
+function gexFirstInstance(instance) {
+	if (instance) {
+		return instance;
+	}
+	return 'none';
+}
+
+function gex(state, table, instance) {
+	var _table = gexTable(table);
+	var _firstInstance = gexFirstInstance(instance);
+	try {
+
+		var _lastInstance = _table.reduce(function (_previousInstance, _entry, _index) {
+			if (_previousInstance === 'none') {
+				return state.get(_entry);
+			}
+			if (_previousInstance) {
+				var _instanceTWR = _previousInstance.get(_entry + 'TWR');
+
+				if (_instanceTWR) {
+					var pluralEntry = _entry.pluralize.toString();
+					if (_immutable.List.isList(_instanceTWR)) {
+						var orderedMap = _instanceTWR.reduce(function (orderedMap, id) {
+							var _globeInstance = state.getIn([_entry.toString(), id.toString()]);
+							if (_globeInstance && !_globeInstance.get('deleted_at')) {
+								return orderedMap.set(id.toString(), _globeInstance);
+							}
+							return orderedMap;
+						}, (0, _immutable.OrderedMap)());
+						return orderedMap;
+					}
+					var _globeInstance = state.getIn([pluralEntry, _instanceTWR.toString()]);
+					if (_globeInstance) {
+						return _globeInstance;
+					}
+					return undefined;
+				}
+				var _nextInstance = _previousInstance.get(_entry.toString());
+				return _nextInstance;
+			}
+			return _previousInstance;
+		}, _firstInstance);
+		return _lastInstance;
+	} catch (e) {
+		console.log('GEX ERROR', e);
+		throw e;
+	}
+}
 
 function createTree(k) {
 	if (Array.isArray(k)) {

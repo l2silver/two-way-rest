@@ -176,6 +176,9 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 			parent: this
 		};
 	},
+	getInitialState: function getInitialState() {
+		return { uploadProgress: undefined };
+	},
 	addChildListTables: function addChildListTables(childListTables) {
 		this.childListTables.mergeDeep(childListTables);
 	},
@@ -360,11 +363,14 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		if (this.props.forceUpdate) {
 			return true;
 		}
-		if (window.location.href != this.oldWindow) {
+		if (this.oldWindow) {
+			if (window.location.href != this.oldWindow) {
+				this.oldWindow = window.location.href;
+				return true;
+			}
+		} else {
 			this.oldWindow = window.location.href;
-			return true;
 		}
-
 		var propNames = Object.keys(nextProps);
 		var newProps = propNames.reduce(function (bool, propName) {
 			if (bool) {
@@ -373,17 +379,28 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 			switch (propName) {
 				case 'state':
 					return bool;
+				case 'replace':
+					return bool;
+				case 'callback':
+					return bool;
+				case 'callforward':
+					return bool;
+				case 'onSuccessCB':
+					return bool;
+				case 'onFailureCB':
+					return bool;
+				case 'content':
+					return bool;
 			}
 			if (nextProps[propName] == _this4.props[propName]) {
 				return false;
 			}
+
 			return true;
 		}, false);
-
 		if (newProps) {
 			return true;
 		}
-
 		return !this.sameGlobe(nextProps);
 	},
 	shouldComponentUpdate: function shouldComponentUpdate(nextProps) {
@@ -396,7 +413,6 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 	},
 	componentDidUpdate: function componentDidUpdate() {
 		this.context.listTables(this.getListTables());
-		this.resetFunction();
 	},
 	componentWillMount: function componentWillMount() {
 		var tableName = this.tree().first();
@@ -409,6 +425,7 @@ var defaultProperties = exports.defaultProperties = (0, _immutable.Map)({
 		this.childListTables = (0, _immutable.Map)().asMutable();
 	},
 	componentWillUpdate: function componentWillUpdate() {
+		this.resetFunction();
 		return this.checkTreeChange();
 	},
 	componentDidMount: function componentDidMount() {

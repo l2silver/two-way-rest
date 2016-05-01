@@ -75,8 +75,12 @@ function setAddress(url) {
       };
     }
   });
-  exports['up'] = function (address, formData) {
-    return request.post(url + address).send(formData).withCredentials().then(function (res) {
+  exports['up'] = function (address, formData, twr) {
+    return request.post(url + address).send(formData).withCredentials().on('progress', function (e) {
+      twr.setState(Object.assign({}, twr.state, { uploadProgress: e.percent }));
+      twr.forceUpdate();
+      console.log('Percentage done: ', e.percent, twr.state);
+    }).then(function (res) {
       if (res.statusCode == 200) {
         return res.body;
       }

@@ -57,7 +57,7 @@ function coreGET(args, type) {
 			return true;
 		}
 	}
-	args.get('dispatch')(actions.setAction(args.get('reducer'), componentHelpers[type + 'Check'](args.get('tree'))));
+	args.get('batchDispatch')(actions.setAction(args.get('reducer'), componentHelpers[type + 'Check'](args.get('tree'))));
 	return (0, _creatorsHelpers.callforwardCreator)(args).then(function (args) {
 		return (0, _creatorsHelpers.getType)(args).then(function (response) {
 			console.log('response' + type, response);
