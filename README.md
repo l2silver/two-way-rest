@@ -42,4 +42,7 @@ I'm from the trenches. I build relatively simple websites for small businesses, 
 ## Fundamental Theory:
 There are two fundamental theories that power two-way-rest. The first is the idea that public functions that manipulate a database should have the same relative location as their frontend equivalents. The second, and the more crucial, is that information transmission should always be packaged in a key-value object, as opposed to just a value. The reason is because keys in key-value objects inuitively tell us the location of where a message should go. When these key-value objects are placed in a database which powers all of the logic in an application, they can, in many cases, eliminate the need to write code for receiving messages.
 
-Please checkout the full documentation at https://l2silver.gitbooks.io/two-way-rest/content/
+## Other Resources
+
+Full Docss: https://l2silver.gitbooks.io/two-way-rest/content/  
+Boierplate Example: https://github.com/l2silver/two-way-rest-boilerplate  
