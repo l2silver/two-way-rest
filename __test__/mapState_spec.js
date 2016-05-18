@@ -9,6 +9,7 @@ import {
 	, idArray
 	, createOrderedMap
 	, createMapObject
+	, mergeWithoutList
 	
 } from './../lib/mapState';
 
@@ -18,6 +19,15 @@ import inflect from 'i';
 inflect(true);
 
 describe('mapState', ()=>{
+	it('mergeWithoutList',()=>{
+		const x = fromJS({friends: [1], user: {name: null, id: 2}})
+		const y = fromJS({friends: [2], user: {name: 'james', id: 1}})
+		const merged =  x.mergeWith(
+			mergeWithoutList
+			, y
+		)
+		expect(merged).to.equal(fromJS({friends: [2], user: {name: 'james', id: 1}}))
+	})
 	it.skip('benchmark', ()=>{
 		const input = Range(1,10000).reduce((list, value)=>{
 			const initialObject = {

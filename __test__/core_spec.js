@@ -28,6 +28,7 @@ import inflect from 'i';
 inflect(true);
 
 describe('core', ()=>{
+	
 	it('custom', ()=>{
 		const state = Map();
 		function fn(state){

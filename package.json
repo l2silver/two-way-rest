@@ -4,7 +4,7 @@
   "description": "Two-Way-Rest architecture for react-redux",
   "main": "dist/index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --compilers js:babel-core/register --require './__test__/test_helper.js' './__test__/*_spec.js' --recursive",
+    "test": "NODE_ENV=test mocha --compilers js:babel-core/register --require './__test__/test_helper.js' './__test__/**/*_spec.js' --recursive",
     "test:watch": "npm run test -- --watch",
     "build": "babel lib --out-dir dist",
     "pgtR": "pgt -r",
@@ -53,6 +53,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
     "chai-immutable": "^1.5.3",
+    "enzyme": "^2.3.0",
     "jsdom": "^8.1.0",
     "mocha": "^2.4.5",
     "nock": "^7.2.2",
