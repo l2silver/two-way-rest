@@ -3,7 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.TWRDestroyFront = exports.TWRDestroy = exports.TWRXUpdate = exports.TWRUpdateFront = exports.TWRUpdate = exports.TWRCreateChildFront = exports.TWRCreateChild = exports.TWRCreateFront = exports.TWRCreate = exports.TWRLink = exports.TWRIndexFront = exports.TWRShowFront = exports.TWRShow = exports.TWRIndex = exports.TWRBreadCrumbs = exports.DeclareReducer = exports.StupidTWRLink = exports.StupidTWRBreadCrumbs = exports.StupidTWRCreateChildFront = exports.StupidTWRCreateChild = exports.StupidTWRCreateFront = exports.StupidTWRCreate = exports.StupidTWRIndexFront = exports.StupidTWRShowFront = exports.StupidTWRShow = exports.StupidTWRIndex = exports.StupidTWRDestroyFront = exports.StupidTWRDestroy = exports.StupidTWRXUpdate = exports.StupidTWRUpdateFront = exports.StupidTWRUpdate = undefined;
+exports.TWRDestroyFront = exports.TWRDestroy = exports.TWRXUpdate = exports.TWRUpdateFront = exports.TWRUpdate = exports.TWRCreateChildFront = exports.TWRCreateChild = exports.TWRCreateFront = exports.TWRCreate = exports.TWRLink = exports.TWRIndexFront = exports.TWRShowFront = exports.TWRShow = exports.TWRIndex = exports.TWRBreadCrumbs = exports.TWRBatch = exports.DeclareReducer = exports.StupidTWRLink = exports.StupidTWRBreadCrumbs = exports.StupidTWRCreateChildFront = exports.StupidTWRCreateChild = exports.StupidTWRCreateFront = exports.StupidTWRCreate = exports.StupidTWRIndexFront = exports.StupidTWRShowFront = exports.StupidTWRShow = exports.StupidTWRIndex = exports.StupidTWRDestroyFront = exports.StupidTWRDestroy = exports.StupidTWRXUpdate = exports.StupidTWRUpdateFront = exports.StupidTWRUpdate = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -37,13 +39,21 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var i = (0, _i2.default)(true);
 
 var StupidTWRUpdate = exports.StupidTWRUpdate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderProperties).merge(_componentProperties.defaultPostUpdateProperties).toJS());
 
 var StupidTWRUpdateFront = exports.StupidTWRUpdateFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultCreateSubstate).merge(_componentProperties.defaultPostRenderProperties).merge(_componentProperties.defaultPostUpdateProperties).merge({
 	submitForm: function submitForm(event) {
-		event.preventDefault();
+		if (event.hasOwnProperty('preventDefault')) {
+			event.preventDefault();
+		}
 		actionCreators.updateFront((0, _componentProperties.createArgs)(this, (0, _reactDom.findDOMNode)(this)));
 	}
 }).toJS());
@@ -134,14 +144,14 @@ var StupidTWRIndexFront = exports.StupidTWRIndexFront = _react2.default.createCl
 
 var StupidTWRCreate = exports.StupidTWRCreate = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
 	getTree: function getTree(props) {
-		var listTree = (0, _componentProperties.generateTree)(props.tree, this);
+		var listTree = (0, _componentProperties.generateTree)(props.tree);
 		return listTree.push(this.getId());
 	}
 }).toJS());
 
 var StupidTWRCreateFront = exports.StupidTWRCreateFront = _react2.default.createClass(_componentProperties.defaultProperties.merge(_componentProperties.defaultPostCreateProperties).merge({
 	getTree: function getTree(props) {
-		var listTree = (0, _componentProperties.generateTree)(props.tree, this);
+		var listTree = (0, _componentProperties.generateTree)(props.tree);
 		return listTree.push(this.getId());
 	},
 	submitForm: function submitForm(event) {
@@ -304,6 +314,65 @@ var DeclareReducer = exports.DeclareReducer = _react2.default.createClass({
 		);
 	}
 });
+
+var TWRBatch = exports.TWRBatch = function (_Component) {
+	_inherits(TWRBatch, _Component);
+
+	function TWRBatch() {
+		_classCallCheck(this, TWRBatch);
+
+		return _possibleConstructorReturn(this, Object.getPrototypeOf(TWRBatch).apply(this, arguments));
+	}
+
+	_createClass(TWRBatch, [{
+		key: 'shouldComponentUpdate',
+		value: function shouldComponentUpdate() {
+			return true;
+		}
+	}, {
+		key: 'componentWillMount',
+		value: function componentWillMount() {
+			this.batchedActions = [];
+			this.indexBatchedActions = 0;
+
+			this.totalBatchedActions = this.props.children.length;
+			this.dispatched = false;
+		}
+	}, {
+		key: 'batchBatchDispatch',
+		value: function batchBatchDispatch(actions) {
+			this.batchedActions = this.batchedActions.concat(actions);
+			this.indexBatchedActions += 1;
+			if (this.indexBatchedActions == this.totalBatchedActions) {
+
+				(0, _componentProperties.runBatchBatchDispatch)(this.batchedActions);
+				this.dispatched = true;
+				this.forceUpdate();
+			}
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			var _this6 = this;
+
+			var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
+				if (child) {
+					return _react2.default.cloneElement(child, { batchBatchDispatch: _this6.batchBatchDispatch.bind(_this6) });
+				}
+			});
+			if (this.dispatched) {
+				return this.props.afterBatch;
+			}
+			return _react2.default.createElement(
+				'div',
+				null,
+				childrenWithProps
+			);
+		}
+	}]);
+
+	return TWRBatch;
+}(_react.Component);
 
 function mapStateToProps(state) {
 	return {

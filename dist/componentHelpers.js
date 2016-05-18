@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+exports.customAction = customAction;
+exports.triggerEvent = triggerEvent;
 exports.triggerSubmit = triggerSubmit;
 exports.createId = createId;
 exports.reverseTree = reverseTree;
@@ -31,8 +33,21 @@ var _i2 = _interopRequireDefault(_i);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 (0, _i2.default)(true);
+
+function customAction(args, fn) {
+	args.get('dispatch')(args.get('twr').customAction(fn));
+}
+
+function triggerEvent(form) {
+	var event = arguments.length <= 1 || arguments[1] === undefined ? 'submit' : arguments[1];
+
+	(0, _reactDom.findDOMNode)(form).dispatchEvent(new Event(event));
+}
+
 function triggerSubmit(form) {
-	(0, _reactDom.findDOMNode)(form).dispatchEvent(new Event('submit'));
+	var event = arguments.length <= 1 || arguments[1] === undefined ? 'submit' : arguments[1];
+
+	triggerEvent(form);
 }
 
 function createId() {

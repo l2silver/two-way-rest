@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.creators = exports.core = exports.actions = undefined;
 
-var _components = require('./components.js');
+var _components = require('./components');
 
 Object.keys(_components).forEach(function (key) {
   if (key === "default") return;
@@ -17,7 +17,7 @@ Object.keys(_components).forEach(function (key) {
   });
 });
 
-var _componentHelpers = require('./componentHelpers.js');
+var _componentHelpers = require('./componentHelpers');
 
 Object.keys(_componentHelpers).forEach(function (key) {
   if (key === "default") return;
@@ -29,7 +29,7 @@ Object.keys(_componentHelpers).forEach(function (key) {
   });
 });
 
-var _componentProperties = require('./componentProperties.js');
+var _componentProperties = require('./componentProperties');
 
 Object.keys(_componentProperties).forEach(function (key) {
   if (key === "default") return;
@@ -41,7 +41,7 @@ Object.keys(_componentProperties).forEach(function (key) {
   });
 });
 
-var _reducers = require('./reducers.js');
+var _reducers = require('./reducers');
 
 Object.keys(_reducers).forEach(function (key) {
   if (key === "default") return;
@@ -53,7 +53,7 @@ Object.keys(_reducers).forEach(function (key) {
   });
 });
 
-var _fetch = require('./fetch.js');
+var _fetch = require('./fetch');
 
 Object.keys(_fetch).forEach(function (key) {
   if (key === "default") return;
@@ -65,15 +65,27 @@ Object.keys(_fetch).forEach(function (key) {
   });
 });
 
-var _actions = require('./actions.js');
+var _mapState = require('./mapState');
+
+Object.keys(_mapState).forEach(function (key) {
+  if (key === "default") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _mapState[key];
+    }
+  });
+});
+
+var _actions = require('./actions');
 
 var actionsImport = _interopRequireWildcard(_actions);
 
-var _core = require('./core.js');
+var _core = require('./core');
 
 var coreImport = _interopRequireWildcard(_core);
 
-var _creators = require('./creators.js');
+var _creators = require('./creators');
 
 var creatorsImport = _interopRequireWildcard(_creators);
 
