@@ -110,7 +110,7 @@ function idArray(children) {
 }
 
 function mergeWithoutList(prev, next) {
-	if (next && (typeof next === 'undefined' ? 'undefined' : _typeof(next)) == 'object') {
+	if (prev && (typeof prev === 'undefined' ? 'undefined' : _typeof(prev)) == 'object') {
 		if (_immutable.List.isList(prev)) {
 			return next;
 		} else {
