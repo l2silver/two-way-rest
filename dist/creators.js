@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 exports.customAction = undefined;
+exports.checkReset = checkReset;
 exports.coreGET = coreGET;
 exports.substateDeleteCreator = substateDeleteCreator;
 exports.substateCreateCreator = substateCreateCreator;
@@ -51,8 +52,24 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 var customAction = exports.customAction = actions.custom;
 
+function checkReset(resetTableName, reducerState, args) {
+	if (resetTableName) {
+		(function () {
+			var location = ['batchReset', args.get('reset'), args.get('tree').first()];
+			if (!reducerState.hasIn(location)) {
+				args.get('dispatch')(customAction(function (state) {
+					return state.setIn(location, true);
+				}));
+			}
+		})();
+	}
+}
+
 function coreGET(args, type) {
-	if (args.get('getState')()[args.get('reducer')].getIn(componentHelpers[type + 'Check'](args.get('tree')))) {
+	var resetTableName = args.get('reset');
+	var reducerState = args.get('getState')()[args.get('reducer')];
+	checkReset(resetTableName, reducerState, args);
+	if (reducerState.getIn(componentHelpers[type + 'Check'](args.get('tree')))) {
 		if (!args.get('force')) {
 			return true;
 		}

@@ -12,6 +12,7 @@ exports.gex = gex;
 exports.createTree = createTree;
 exports.createOrderedMap = createOrderedMap;
 exports.idArray = idArray;
+exports.mergeWithoutList = mergeWithoutList;
 exports.wrapMapState = wrapMapState;
 exports.checklistWithId = checklistWithId;
 exports.mapState = mapState;
@@ -108,6 +109,17 @@ function idArray(children) {
 	}
 }
 
+function mergeWithoutList(prev, next) {
+	if (prev && (typeof prev === 'undefined' ? 'undefined' : _typeof(prev)) == 'object') {
+		if (_immutable.List.isList(prev)) {
+			return next;
+		} else {
+			return prev.mergeWith(mergeWithoutList, next);
+		}
+	}
+	return next;
+}
+
 function wrapMapState(js, tree) {
 	var globe = arguments.length <= 2 || arguments[2] === undefined ? (0, _immutable.Map)() : arguments[2];
 
@@ -115,7 +127,8 @@ function wrapMapState(js, tree) {
 	var startGlobe = (0, _immutable.Map)().asMutable();
 	mapState(_immutable.Map.isMap(js) || _immutable.List.isList(js) ? js : (0, _immutable.fromJS)(js), tree, startGlobe);
 	//console.log('mapStateTime', new Date().getTime() - startTime);
-	return globe.mergeDeep(startGlobe.asImmutable());
+	return globe.mergeWith(mergeWithoutList, startGlobe.asImmutable());
+	//return globe.mergeDeep(startGlobe.asImmutable());
 }
 
 function checklistWithId(js) {

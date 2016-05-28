@@ -63,8 +63,7 @@ function substateDelete() {
 	var tree = arguments[1];
 	var content = arguments[2];
 
-	var Substate = state.get('Substate').deleteIn(tree);
-	return state.set('Substate', Substate);
+	return state.deleteIn(tree.unshift('Substate'));
 }
 
 function createCleanCloneElement(cloneElement) {

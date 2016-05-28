@@ -8,6 +8,7 @@ import {
 	, urlPath
 	, generateTree
 	, getTree
+	, getTreeFromLocation
 	, createErrors
 	, createArgs
 	, defaultProperties
@@ -28,23 +29,40 @@ describe('components_properties', ()=>{
 				expect(generateTree(['tree'])).to.equal(List(['tree']));
 			})
 			it('generatesTree from location', ()=>{
-				const MComponent = genMock(defaultProperties, {reducer: 'test'})
-				expect(generateTree('tree', MComponent)).to.equal(List(['tree']));
+				expect(getTreeFromLocation('http://remoteUrl.com/tree')).to.equal(List(['tree']));
 			})
 			it('generatesTree from complex location', ()=>{
 				const MComponent = genMock(defaultProperties, {reducer: 'test'})
-				expect(generateTree('tree/tree/tree', MComponent)).to.equal(List(['tree', 'tree', 'tree']));
+				expect(getTreeFromLocation('http://remoteUrl.com/tree/tree/tree')).to.equal(List(['tree']));
 			})
 		})
 		it('urlPath', ()=>{
 			expect(urlPath(['test'])).to.equal('/test')
 		})
 		describe('getTree', ()=>{
-			it('with start', ()=>{
-				expect(getTree('test', 'http://remoteUrl.com/test/location')).to.equal(List(['location']))
+			it('without id', ()=>{
+				expect(getTreeFromLocation('http://remoteUrl.com/test/location')).to.equal(List(['location']))
 			})
-			it('without start', ()=>{
-				expect(getTree('tester', 'http://remoteUrl.com/test/location', 'http://remoteUrl.com')).to.equal(List(['test','location']))
+			it('with id', ()=>{
+				expect(getTreeFromLocation('http://remoteUrl.com/test/location/1')).to.equal(List(['location', '1']))
+			})
+			it('with id and adjective', ()=>{
+				expect(getTreeFromLocation('http://remoteUrl.com/test/location/1/edit')).to.equal(List(['location', '1']))
+			})
+			it('without id and with adjective', ()=>{
+				expect(getTreeFromLocation('http://remoteUrl.com/test/location/create')).to.equal(List(['location']))
+			})
+			it('with trailing /', ()=>{
+				expect(getTreeFromLocation('http://remoteUrl.com/test/location/')).to.equal(List(['location']))
+			})
+			it('simple name', ()=>{
+				expect(getTreeFromLocation('location')).to.equal(List(['location']))
+			})
+			it('simple name with id', ()=>{
+				expect(getTreeFromLocation('location/1')).to.equal(List(['location', '1']))
+			})
+			it('simple name with id and adjective', ()=>{
+				expect(getTreeFromLocation('location/1/edit')).to.equal(List(['location', '1']))
 			})
 		})
 		describe('createErrors', ()=>{

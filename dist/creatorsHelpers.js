@@ -162,6 +162,9 @@ function callforwardCreator(args) {
 function callbackCreator(args) {
 	return calls(args, 'callback').then(function () {
 		try {
+			if (args.get('batchBatchDispatch')) {
+				return args.get('batchBatchDispatch')(args.get('dispatchList'));
+			}
 			return args.get('batchDispatch')((0, _reduxBatchedActions.batchActions)(args.get('dispatchList')));
 		} catch (e) {
 			console.log('Error rendering after state change', e);
